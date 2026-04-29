@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-04-29
+
+### Docs
+- Update README.md
+- Update SUMD.md
+- Update SUMR.md
+
+### Test
+- Update testql-scenarios/generated-api-integration.testql.toon.yaml
+- Update testql-scenarios/generated-api-smoke.testql.toon.yaml
+- Update testql-scenarios/generated-from-pytests.testql.toon.yaml
+
+### Other
+- Update app.doql.less
+- Update project/duplication.toon.yaml
+- Update project/map.toon.yaml
+- Update tree.txt
+
 ## [0.1.10] - 2026-04-29
 
 ### Docs

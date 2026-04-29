@@ -1,0 +1,29 @@
+# SCENARIO: Auto-generated from Python Tests
+# TYPE: integration
+# GENERATED: true
+
+CONFIG[2]{key, value}:
+  base_url, ${api_url:-http://localhost:8101}
+  timeout_ms, 10000
+
+# Converted 10 API calls from pytest
+API[10]{method, endpoint, expected_status}:
+  GET, /openapi.json, 200
+  POST, /drivers/browserless/screenshot, 200
+  POST, /drivers/dom-diff/capture, 200
+  POST, /events, 200
+  GET, /events, 200
+  GET, /openapi.json, 200
+  POST, /drivers/browserless/screenshot, 200
+  POST, /drivers/dom-diff/capture, 200
+  POST, /events, 200
+  GET, /events, 200
+
+# Converted 6 assertions from pytest
+ASSERT[6]{field, operator, expected}:
+  _status, ==, 200
+  _status, ==, 503
+  items[0].diff.counts.added, ==, 5
+  _status, ==, 200
+  _status, ==, 503
+  items[0].diff.counts.added, ==, 5

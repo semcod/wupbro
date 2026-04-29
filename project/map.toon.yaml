@@ -1,36 +1,85 @@
-# wupbro | 15f 1677L | shell:2,toml:1,yaml:1,python:11 | 2026-04-29
-# stats: 47 func | 0 cls | 15 mod | CC̄=2.6 | critical:0 | cycles:0
-# alerts[2]: fan-out notification_stream=13; fan-out dom_diff_capture=12
-# hotspots[5]: notification_stream fan=13; dom_diff_capture fan=12; browserless_screenshot fan=7; post_event fan=7; NotificationManager.process_event fan=7
+# wupbro | 19f 1395L | python:16,shell:2,less:1 | 2026-04-29
+# stats: 47 func | 10 cls | 19 mod | CC̄=2.4 | critical:0 | cycles:0
+# alerts[5]: CC test_anomaly_report_creates_event=7; CC test_openapi_schema_includes_routes=6; CC test_driver_health_reports_capabilities=6; CC test_list_events_returns_recent=6; CC test_event_stats=5
+# hotspots[5]: notification_stream fan=13; dom_diff_capture fan=12; post_event fan=7; main fan=6; list_events fan=6
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[15]:
-  goal.yaml,511
+M[19]:
+  app.doql.less,83
   project.sh,49
-  pyproject.toml,74
-  tree.sh,1
-  wupbro/__init__.py,7
-  wupbro/__main__.py,21
-  wupbro/main.py,45
-  wupbro/models.py,123
-  wupbro/notifications.py,283
-  wupbro/routers/__init__.py,1
-  wupbro/routers/dashboard.py,24
-  wupbro/routers/drivers.py,129
-  wupbro/routers/events.py,65
-  wupbro/routers/notifications.py,234
-  wupbro/storage.py,110
+  tests/__init__.py,1
+  tests/conftest.py,24
+  tests/test_dashboard.py,36
+  tests/test_drivers.py,51
+  tests/test_events.py,96
+  tree.sh,2
+  wupbro/__init__.py,8
+  wupbro/__main__.py,22
+  wupbro/main.py,46
+  wupbro/models.py,124
+  wupbro/notifications.py,284
+  wupbro/routers/__init__.py,2
+  wupbro/routers/dashboard.py,25
+  wupbro/routers/drivers.py,130
+  wupbro/routers/events.py,66
+  wupbro/routers/notifications.py,235
+  wupbro/storage.py,111
 D:
+  tests/__init__.py:
+  tests/conftest.py:
+    e: fresh_store,client
+    fresh_store()
+    client(fresh_store)
+  tests/test_dashboard.py:
+    e: test_root_serves_dashboard,test_dashboard_alias,test_healthz,test_openapi_schema_includes_routes
+    test_root_serves_dashboard(client)
+    test_dashboard_alias(client)
+    test_healthz(client)
+    test_openapi_schema_includes_routes(client)
+  tests/test_drivers.py:
+    e: test_anomaly_report_creates_event,test_driver_health_reports_capabilities,test_browserless_unreachable_returns_503,test_dom_diff_endpoint_exists
+    test_anomaly_report_creates_event(client)
+    test_driver_health_reports_capabilities(client)
+    test_browserless_unreachable_returns_503(client;monkeypatch)
+    test_dom_diff_endpoint_exists(client)
+  tests/test_events.py:
+    e: test_post_event_accepted,test_post_event_invalid_type_rejected,test_list_events_returns_recent,test_list_events_filter_by_type,test_list_events_filter_by_service,test_list_events_limit,test_event_stats,test_clear_events,test_event_extra_fields_preserved
+    test_post_event_accepted(client)
+    test_post_event_invalid_type_rejected(client)
+    test_list_events_returns_recent(client)
+    test_list_events_filter_by_type(client)
+    test_list_events_filter_by_service(client)
+    test_list_events_limit(client)
+    test_event_stats(client)
+    test_clear_events(client)
+    test_event_extra_fields_preserved(client)
+  wupbro/__init__.py:
+  wupbro/__main__.py:
+    e: main
+    main()
+  wupbro/main.py:
+    e: create_app
+    create_app()
+  wupbro/models.py:
+    e: Event,EventList,DomDiffRequest,ScreenshotRequest,AnomalyReport,NotificationConfig,NotificationSubscription,NotificationPayload
+    Event:  # Generic WUP event posted by an agent.
+    EventList:
+    DomDiffRequest:
+    ScreenshotRequest:
+    AnomalyReport:
+    NotificationConfig:  # Konfiguracja powiadomień przeglądarkowych dla użytkownika.
+    NotificationSubscription:  # Subskrypcja powiadomień dla konkretnego klienta (przeglądark
+    NotificationPayload:  # Payload wysyłany jako powiadomienie przeglądarkowe.
   wupbro/notifications.py:
-    e: NotificationManager,get_notification_manager,set_notification_manager
-    NotificationManager: __init__(1),subscribe(2),unsubscribe(1),get_subscription(1),list_subscriptions(0),update_config(2),process_event(1),_detect_notification_types(2),_should_notify(2),_create_payload(2),register_sse_client(1),unregister_sse_client(1),push_to_sse(1)  # Manages browser notification subscriptions and event detecti...
+    e: get_notification_manager,set_notification_manager,NotificationManager
+    NotificationManager: __init__(1),subscribe(2),unsubscribe(1),get_subscription(1),list_subscriptions(0),update_config(2),process_event(1),_detect_notification_types(2),_should_notify(2),_create_payload(2),register_sse_client(1),unregister_sse_client(1),push_to_sse(1)  # Manages browser notification subscriptions and event detecti
     get_notification_manager(store)
     set_notification_manager(manager)
-  wupbro/storage.py:
-    e: EventStore,get_default_store,set_default_store
-    EventStore: __init__(2),_load_existing(0),add(1),list(3),clear(0),stats(0)  # Thread-safe ring buffer + JSONL persistence...
-    get_default_store()
-    set_default_store(store)
+  wupbro/routers/__init__.py:
+  wupbro/routers/dashboard.py:
+    e: root,dashboard
+    root(request)
+    dashboard(request)
   wupbro/routers/drivers.py:
     e: _store,dom_diff_capture,browserless_screenshot,anomaly_report,driver_health
     _store()
@@ -57,29 +106,8 @@ D:
     get_status_transition_types()
     notification_stream(subscription_id)
     send_test_notification(subscription_id;background_tasks)
-  wupbro/__main__.py:
-    e: main
-    main()
-  wupbro/main.py:
-    e: create_app
-    create_app()
-  wupbro/routers/dashboard.py:
-    e: root,dashboard
-    root(request)
-    dashboard(request)
-  tree.sh:
-  project.sh:
-  pyproject.toml:
-  goal.yaml:
-  wupbro/routers/__init__.py:
-  wupbro/__init__.py:
-  wupbro/models.py:
-    e: Event,EventList,DomDiffRequest,ScreenshotRequest,AnomalyReport,NotificationConfig,NotificationSubscription,NotificationPayload
-    Event(BaseModel):  # Generic WUP event posted by an agent...
-    EventList(BaseModel):
-    DomDiffRequest(BaseModel):
-    ScreenshotRequest(BaseModel):
-    AnomalyReport(BaseModel):
-    NotificationConfig(BaseModel):  # Konfiguracja powiadomień przeglądarkowych dla użytkownika...
-    NotificationSubscription(BaseModel):  # Subskrypcja powiadomień dla konkretnego klienta (przeglądark...
-    NotificationPayload(BaseModel):  # Payload wysyłany jako powiadomienie przeglądarkowe...
+  wupbro/storage.py:
+    e: get_default_store,set_default_store,EventStore
+    EventStore: __init__(2),_load_existing(0),add(1),list(3),clear(0),stats(0)  # Thread-safe ring buffer + JSONL persistence.
+    get_default_store()
+    set_default_store(store)
