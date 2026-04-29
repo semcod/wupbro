@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>code2llm Analysis Results</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --border: #475569;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #22c55e;
+            --warning: #eab308;
+            --error: #ef4444;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: #f8fafc;
+                --surface: #ffffff;
+                --surface-hover: #f1f5f9;
+                --border: #e2e8f0;
+                --text: #1e293b;
+                --text-muted: #64748b;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .search {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            color: var(--text);
+            font-size: 0.875rem;
+            outline: none;
+        }
+
+        .search input:focus {
+            border-color: var(--accent);
+        }
+
+        .search input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .file-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .file-group {
+            margin-bottom: 1rem;
+        }
+
+        .file-group-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            padding: 0.5rem 0.75rem;
+            font-weight: 600;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.625rem 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-bottom: 0.125rem;
+        }
+
+        .file-item:hover {
+            background: var(--surface-hover);
+        }
+
+        .file-item.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .file-item.active .file-meta {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .file-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-size {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        /* Content */
+        .content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .content-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .content-title h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .content-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            background: var(--surface-hover);
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: var(--border);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .content-body {
+            flex: 1;
+            overflow: auto;
+            padding: 1.5rem;
+        }
+
+        /* Welcome */
+        .welcome {
+            max-width: 800px;
+        }
+
+        .welcome h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .welcome p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Content Display */
+        pre {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+        }
+
+        .markdown-content {
+            line-height: 1.7;
+        }
+
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .markdown-content h1 {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .markdown-content p {
+            margin-bottom: 1rem;
+        }
+
+        .markdown-content code {
+            background: var(--surface);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+        }
+
+        .markdown-content pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        .markdown-content ul,
+        .markdown-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .markdown-content li {
+            margin-bottom: 0.25rem;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+            margin-left: 0;
+            color: var(--text-muted);
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .markdown-content th,
+        .markdown-content td {
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content th {
+            background: var(--surface);
+        }
+
+        .markdown-content img {
+            max-width: 100%;
+            border-radius: 0.5rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        /* Mermaid */
+        .mermaid-content {
+            background: var(--surface);
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .mermaid-content pre {
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Image Preview */
+        .image-preview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: var(--surface);
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .sidebar.open {
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 100;
+            }
+
+            .file-size {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="header">
+                <h1>🔍 code2llm</h1>
+                <p>Analysis Results Browser</p>
+            </div>
+            <div class="search">
+                <input type="text" id="search" placeholder="Search files..." oninput="filterFiles(this.value)">
+            </div>
+            <div class="file-list" id="fileList">
+                <!-- Files will be rendered here -->
+            </div>
+        </aside>
+
+        <main class="content">
+            <div class="content-header">
+                <div class="content-title">
+                    <span id="contentIcon">📁</span>
+                    <h2 id="contentTitle">Welcome</h2>
+                </div>
+                <div class="content-actions" id="contentActions">
+                    <!-- Actions will be rendered here -->
+                </div>
+            </div>
+            <div class="content-body" id="contentBody">
+                <div class="welcome">
+                    <h2>Analysis Results</h2>
+                    <p>Select a file from the sidebar to view its contents. This interface works on GitHub Pages without any server required.</p>
+                    <div class="stats-grid" id="statsGrid">
+                        <!-- Stats will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Initialize mermaid
+        mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+
+        const files = [{"name": "calls.png", "rel_path": "calls.png", "path": "calls.png", "size": "69.7KB", "icon": "🖼️", "type": "image", "type_name": "Image", "content": "[Binary file]", "is_subdir": false}, {"name": "compact_flow.png", "rel_path": "compact_flow.png", "path": "compact_flow.png", "size": "14.8KB", "icon": "🖼️", "type": "image", "type_name": "Image", "content": "[Binary file]", "is_subdir": false}, {"name": "flow.png", "rel_path": "flow.png", "path": "flow.png", "size": "18.5KB", "icon": "🖼️", "type": "image", "type_name": "Image", "content": "[Binary file]", "is_subdir": false}, {"name": "README.md", "rel_path": "README.md", "path": "README.md", "size": "9.3KB", "icon": "📝", "type": "markdown", "type_name": "Markdown", "content": "# code2llm - Generated Analysis Files\n\nThis directory contains the complete analysis of your project generated by `code2llm`. Each file serves a specific purpose for understanding, refactoring, and documenting your codebase.\n\n## 📁 Generated Files Overview\n\nWhen you run `code2llm ./ -f all`, the following files are created:\n\n### 🎯 Core Analysis Files\n\n| File | Format | Purpose | Key Insights |\n|------|--------|---------|--------------|\n| `evolution.toon.yaml` | **YAML** | **📋 Refactoring queue** - Prioritized improvements | 0 refactoring actions needed |\n| `map.toon.yaml` | **YAML** | **🗺️ Structural map + project header** - Modules, imports, exports, signatures, stats, alerts, hotspots, trend | Project architecture overview |\n\n### 🤖 LLM-Ready Documentation\n\n| File | Format | Purpose | Use Case |\n|------|--------|---------|----------|\n| `prompt.txt` | **Text** | **📝 Ready-to-send prompt** - Lists all files with instructions | Attach to LLM conversation as context guide |\n| `context.md` | **Markdown** | **📖 LLM narrative** - Architecture summary | Paste into ChatGPT/Claude for code analysis |\n\n### 📊 Visualizations\n\n| File | Format | Purpose | Description |\n|------|--------|---------|-------------|\n| `flow.mmd` | **Mermaid** | **🔄 Control flow diagram** | Function call paths with complexity styling |\n| `calls.mmd` | **Mermaid** | **📞 Call graph** | Function dependencies (edges only) |\n| `compact_flow.mmd` | **Mermaid** | **📦 Module overview** | Aggregated module-level view |\n\n## 🚀 Quick Start Commands\n\n### Basic Analysis\n```bash\n# Quick health check (TOON format only)\ncode2llm ./ -f toon\n\n# Generate all formats (what created these files)\ncode2llm ./ -f all\n\n# LLM-ready context only\ncode2llm ./ -f context\n```\n\n### Performance Options\n```bash\n# Fast analysis for large projects\ncode2llm ./ -f toon --strategy quick\n\n# Memory-limited analysis\ncode2llm ./ -f all --max-memory 500\n\n# Skip PNG generation (faster)\ncode2llm ./ -f all --no-png\n```\n\n### Refactoring Focus\n```bash\n# Get refactoring recommendations\ncode2llm ./ -f evolution\n\n# Focus on specific code smells\ncode2llm ./ -f toon --refactor --smell god_function\n\n# Data flow analysis\ncode2llm ./ -f flow --data-flow\n```\n\n## 📖 Understanding Each File\n\n### `analysis.toon` - Health Diagnostics\n**Purpose**: Quick overview of code health issues\n**Key sections**:\n- **HEALTH**: Critical issues (🔴) and warnings (🟡)\n- **REFACTOR**: Prioritized refactoring actions\n- **COUPLING**: Module dependencies and potential cycles\n- **LAYERS**: Package complexity metrics\n- **FUNCTIONS**: High-complexity functions (CC ≥ 10)\n- **CLASSES**: Complex classes needing attention\n\n**Example usage**:\n```bash\n# View health issues\ncat analysis.toon | head -30\n\n# Check refactoring priorities\ngrep \"REFACTOR\" analysis.toon\n```\n\n### `evolution.toon.yaml` - Refactoring Queue\n**Purpose**: Step-by-step refactoring plan\n**Key sections**:\n- **NEXT**: Immediate actions to take\n- **RISKS**: Potential breaking changes\n- **METRICS-TARGET**: Success criteria\n\n**Example usage**:\n```bash\n# Get refactoring plan\ncat evolution.toon.yaml\n\n# Track progress\ngrep \"NEXT\" evolution.toon.yaml\n```\n\n### `flow.toon` - Legacy Data Flow Analysis\n**Purpose**: Understand data movement through the system (legacy / explicit opt-in)\n**Key sections**:\n- **PIPELINES**: Data processing chains\n- **CONTRACTS**: Function input/output contracts\n- **SIDE_EFFECTS**: Functions with external impacts\n\n**Example usage**:\n```bash\n# Find data pipelines\ngrep \"PIPELINES\" flow.toon\n\n# Identify side effects\ngrep \"SIDE_EFFECTS\" flow.toon\n```\n\n### `map.toon.yaml` - Structural Map + Project Header\n**Purpose**: High-level architecture overview plus compact project header\n**Key sections**:\n- **MODULES**: All modules with basic stats\n- **IMPORTS**: Dependency relationships\n- **EXPORTS**: Public API surface and signatures\n- **HEADER**: Stats, alerts, hotspots, evolution trend\n\n**Example usage**:\n```bash\n# See project structure\ncat map.toon.yaml | head -50\n\n# Find public APIs\ngrep \"SIGNATURES\" map.toon.yaml\n```\n\n### `project.toon.yaml` - Compact Analysis View\n**Purpose**: Compact module view generated from project.yaml data\n**Status**: Legacy view generated on demand from unified project.yaml\n\n**Example usage**:\n```bash\n# View compact project structure\ncat project.toon.yaml | head -30\n\n# Find largest files\ngrep -E \"^  .*[0-9]{3,}$\" project.toon.yaml | sort -t',' -k2 -n -r | head -10\n```\n\n### `prompt.txt` - Ready-to-Send LLM Prompt\n**Purpose**: Pre-formatted prompt listing all generated files for LLM conversation\n**Generation**: Written when `code2llm` runs with a source path and requests `-f all` (including `--no-chunk`) or `code2logic`\n**Contents**:\n- **Files section**: Lists all existing generated files with descriptions, including `project.toon.yaml` when generated by `-f all`\n- **Source files section**: Highlights important source files such as `cli_exports/orchestrator.py`\n- **Missing section**: Shows which files weren't generated (if any)\n- **Task section**: Refactoring brief with concrete execution instructions, not just analysis\n- **Priority Order section**: State-dependent refactoring priorities, starting with blockers and then architecture cleanup\n- **Requirements section**: Guidelines for suggested changes\n\n**Example usage**:\n```bash\n# View the prompt\ncat prompt.txt\n\n# Copy to clipboard and paste into ChatGPT/Claude\ncat prompt.txt | pbcopy  # macOS\ncat prompt.txt | xclip -sel clip  # Linux\n```\n\n### `context.md` - LLM Narrative\n**Purpose**: Ready-to-paste context for AI assistants\n**Key sections**:\n- **Overview**: Project statistics\n- **Architecture**: Module breakdown\n- **Entry Points**: Public interfaces\n- **Patterns**: Design patterns detected\n\n**Example usage**:\n```bash\n# Copy to clipboard for LLM\ncat context.md | pbcopy  # macOS\ncat context.md | xclip -sel clip  # Linux\n\n# Use with Claude/ChatGPT for code analysis\n```\n\n### Visualization Files (`*.mmd`, `*.png`)\n**Purpose**: Visual understanding of code structure\n**Files**:\n- `flow.mmd` - Detailed control flow with complexity colors\n- `calls.mmd` - Simple call graph\n- `compact_flow.mmd` - High-level module view\n- `*.png` - Pre-rendered images\n\n**Example usage**:\n```bash\n# View diagrams\nopen flow.png  # macOS\nxdg-open flow.png  # Linux\n\n# Edit in Mermaid Live Editor\n# Copy content of .mmd files to https://mermaid.live\n```\n\n## 🔍 Common Analysis Patterns\n\n### 1. Code Health Assessment\n```bash\n# Quick health check\ncode2llm ./ -f toon\ncat analysis.toon | grep -E \"(HEALTH|REFACTOR)\"\n```\n\n### 2. Refactoring Planning\n```bash\n# Get refactoring queue\ncode2llm ./ -f evolution\ncat evolution.toon.yaml\n\n# Focus on specific issues\ncode2llm ./ -f toon --refactor --smell god_function\n```\n\n### 3. LLM Assistance\n```bash\n# Generate context for AI\ncode2llm ./ -f context\ncat context.md\n\n# Use with Claude: \"Based on this context, help me refactor the god modules\"\n```\n\n### 4. Team Documentation\n```bash\n# Generate all docs for team\ncode2llm ./ -f all -o ./docs/\n\n# Create visual diagrams\nopen docs/flow.png\n```\n\n## 📊 Interpreting Metrics\n\n### Complexity Metrics (CC)\n- **🔴 Critical (≥5.0)**: Immediate refactoring needed\n- **🟠 High (3.0-4.9)**: Consider refactoring\n- **🟡 Medium (1.5-2.9)**: Monitor complexity\n- **🟢 Low (0.1-1.4)**: Acceptable\n- **⚪ Basic (0.0)**: Simple functions\n\n### Module Health\n- **GOD Module**: Too large (>500 lines, >20 methods)\n- **HUB**: High fan-out (calls many modules)\n- **FAN-IN**: High incoming dependencies\n- **CYCLES**: Circular dependencies\n\n### Data Flow Indicators\n- **PIPELINE**: Sequential data processing\n- **CONTRACT**: Clear input/output specification\n- **SIDE_EFFECT**: External state modification\n\n## 🛠️ Integration Examples\n\n### CI/CD Pipeline\n```bash\n#!/bin/bash\n# Analyze code quality in CI\ncode2llm ./ -f toon -o ./analysis\nif grep -q \"🔴 GOD\" ./analysis/analysis.toon; then\n    echo \"❌ God modules detected\"\n    exit 1\nfi\n```\n\n### Pre-commit Hook\n```bash\n#!/bin/sh\n# .git/hooks/pre-commit\ncode2llm ./ -f toon -o ./temp_analysis\nif grep -q \"🔴\" ./temp_analysis/analysis.toon; then\n    echo \"⚠️  Critical issues found. Review before committing.\"\nfi\nrm -rf ./temp_analysis\n```\n\n### Documentation Generation\n```bash\n# Generate docs for README\ncode2llm ./ -f context -o ./docs/\necho \"## Architecture\" >> README.md\ncat docs/context.md >> README.md\n```\n\n## 📚 Next Steps\n\n1. **Review `analysis.toon`** - Identify critical issues\n2. **Check `evolution.toon.yaml`** - Plan refactoring priorities\n3. **Use `context.md`** - Get LLM assistance for complex changes\n4. **Reference visualizations** - Understand system architecture\n5. **Track progress** - Re-run analysis after changes\n\n## 🔧 Advanced Usage\n\n### Custom Analysis\n```bash\n# Deep analysis with all insights\ncode2llm ./ -m hybrid -f all --max-depth 15 -v\n\n# Performance-optimized\ncode2llm ./ -m static -f toon --strategy quick\n\n# Refactoring-focused\ncode2llm ./ -f toon,evolution --refactor\n```\n\n### Output Customization\n```bash\n# Separate output directories\ncode2llm ./ -f all -o ./analysis-$(date +%Y%m%d)\n\n# Split YAML into multiple files\ncode2llm ./ -f yaml --split-output\n\n# Separate orphaned functions\ncode2llm ./ -f yaml --separate-orphans\n```\n\n---\n\n**Generated by**: `code2llm ./ -f all --readme`  \n**Analysis Date**: 2026-04-29  \n**Total Functions**: 47  \n**Total Classes**: 10  \n**Modules**: 15  \n\nFor more information about code2llm, visit: https://github.com/tom-sapletta/code2llm\n", "is_subdir": false}, {"name": "context.md", "rel_path": "context.md", "path": "context.md", "size": "13.8KB", "icon": "📝", "type": "markdown", "type_name": "Markdown", "content": "# System Architecture Analysis\n\n## Overview\n\n- **Project**: /home/tom/github/semcod/wupbro\n- **Primary Language**: python\n- **Languages**: python: 11, shell: 2, toml: 1, yaml: 1\n- **Analysis Mode**: static\n- **Total Functions**: 47\n- **Total Classes**: 10\n- **Modules**: 15\n- **Entry Points**: 44\n\n## Architecture by Module\n\n### wupbro.notifications\n- **Functions**: 15\n- **Classes**: 1\n- **File**: `notifications.py`\n\n### wupbro.routers.notifications\n- **Functions**: 10\n- **File**: `notifications.py`\n\n### wupbro.storage\n- **Functions**: 8\n- **Classes**: 1\n- **File**: `storage.py`\n\n### wupbro.routers.drivers\n- **Functions**: 5\n- **File**: `drivers.py`\n\n### wupbro.routers.events\n- **Functions**: 5\n- **File**: `events.py`\n\n### wupbro.routers.dashboard\n- **Functions**: 2\n- **File**: `dashboard.py`\n\n### wupbro.__main__\n- **Functions**: 1\n- **File**: `__main__.py`\n\n### wupbro.main\n- **Functions**: 1\n- **File**: `main.py`\n\n### wupbro.models\n- **Functions**: 0\n- **Classes**: 8\n- **File**: `models.py`\n\n## Key Entry Points\n\nMain execution flows into the system:\n\n### wupbro.routers.notifications.notification_stream\n> Server-Sent Events endpoint for real-time notifications.\n\nConnect to this endpoint to receive notifications in real-time.\nRequires active subscription\n- **Calls**: router.get, Query, wupbro.notifications.get_notification_manager, manager.get_subscription, manager.register_sse_client, StreamingResponse, HTTPException, event_generator\n\n### wupbro.routers.drivers.dom_diff_capture\n> Trigger a one-shot DOM snapshot + diff against the previous snapshot.\n\nRequires: `pip install wup playwright` and `playwright install chromium`.\n- **Calls**: router.post, Depends, VisualDiffConfig, VisualDiffer, os.getcwd, differ.run_for_service, store.add, HTTPException\n\n### wupbro.__main__.main\n- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.parse_args, uvicorn.run, os.environ.get, int\n\n### wupbro.routers.drivers.browserless_screenshot\n> Proxy to a `browserless/chrome` container.\n\nSet BROWSERLESS_URL (default http://browserless:3000) for the upstream.\n- **Calls**: router.post, os.environ.get, httpx.AsyncClient, HTTPException, resp.headers.get, len, HTTPException, client.post\n\n### wupbro.routers.events.list_events\n- **Calls**: router.get, Query, Query, Query, Depends, store.list, EventList, len\n\n### wupbro.notifications.NotificationManager._detect_notification_types\n> Detect which notification types apply to this event.\n- **Calls**: detected.append, self._service_health.get, detected.append, detected.append, detected.append, detected.append, detected.append, detected.append\n\n### wupbro.notifications.NotificationManager._create_payload\n> Create notification payload for the given type and event.\n- **Calls**: payloads.get, NotificationPayload, NotificationPayload, NotificationPayload, NotificationPayload, NotificationPayload, NotificationPayload, NotificationPayload\n\n### wupbro.routers.events.post_event\n- **Calls**: router.post, Depends, store.add, wupbro.notifications.get_notification_manager, notification_manager.process_event, notification_manager.push_to_sse, len\n\n### wupbro.main.create_app\n- **Calls**: FastAPI, app.add_middleware, app.include_router, app.include_router, app.include_router, app.include_router, app.get\n\n### wupbro.notifications.NotificationManager.process_event\n> Process event and generate notifications for matching subscriptions.\n\nReturns list of (subscription_id, notification_payload) tuples.\n- **Calls**: int, self._detect_notification_types, self._subscriptions.items, time.time, self._should_notify, self._create_payload, notifications.append\n\n### wupbro.routers.notifications.subscribe\n> Create a new notification subscription.\n\nReturns subscription with unique ID that should be stored client-side\nfor subsequent requests.\n- **Calls**: router.post, wupbro.notifications.get_notification_manager, manager.subscribe, str, NotificationConfig, uuid.uuid4\n\n### wupbro.routers.notifications.send_test_notification\n> Send a test notification to verify subscription works.\n\nThe notification will be queued and sent via SSE if client is connected.\n- **Calls**: router.post, wupbro.notifications.get_notification_manager, manager.get_subscription, NotificationPayload, manager.push_to_sse, HTTPException\n\n### wupbro.storage.EventStore._load_existing\n- **Calls**: self.jsonl_path.exists, self.jsonl_path.open, line.strip, self.events.append, Event.model_validate_json\n\n### wupbro.storage.EventStore.add\n- **Calls**: self.events.append, id, self.jsonl_path.open, fh.write, event.model_dump_json\n\n### wupbro.routers.drivers.anomaly_report\n- **Calls**: router.post, Depends, store.add, Event\n\n### wupbro.routers.notifications.get_subscription\n> Get specific subscription details.\n- **Calls**: router.get, wupbro.notifications.get_notification_manager, manager.get_subscription, HTTPException\n\n### wupbro.routers.notifications.update_subscription\n> Update notification configuration for existing subscription.\n- **Calls**: router.put, wupbro.notifications.get_notification_manager, manager.update_config, HTTPException\n\n### wupbro.routers.notifications.unsubscribe\n> Remove notification subscription.\n- **Calls**: router.delete, wupbro.notifications.get_notification_manager, manager.unsubscribe, HTTPException\n\n### wupbro.storage.EventStore.__init__\n- **Calls**: deque, threading.Lock, self.jsonl_path.parent.mkdir, self._load_existing\n\n### wupbro.storage.EventStore.clear\n- **Calls**: self.events.clear, self._seq_by_id.clear, self.jsonl_path.exists, self.jsonl_path.unlink\n\n### wupbro.routers.events.event_stats\n- **Calls**: router.get, Depends, store.stats\n\n### wupbro.routers.events.clear_events\n- **Calls**: router.delete, Depends, store.clear\n\n### wupbro.routers.notifications.list_subscriptions\n> List all active notification subscriptions.\n- **Calls**: router.get, wupbro.notifications.get_notification_manager, manager.list_subscriptions\n\n### wupbro.routers.drivers.driver_health\n> Best-effort capability discovery.\n- **Calls**: router.get, os.environ.get\n\n### wupbro.routers.dashboard.root\n- **Calls**: router.get, templates.TemplateResponse\n\n### wupbro.routers.dashboard.dashboard\n- **Calls**: router.get, templates.TemplateResponse\n\n### wupbro.notifications.NotificationManager.__init__\n- **Calls**: threading.Lock, defaultdict\n\n### wupbro.notifications.NotificationManager.list_subscriptions\n> List all active subscriptions.\n- **Calls**: wupbro.storage.EventStore.list, self._subscriptions.values\n\n### wupbro.notifications.NotificationManager.push_to_sse\n> Push notification to all SSE clients.\n- **Calls**: self._sse_queues.values, queue.append\n\n### wupbro.routers.notifications.get_default_config\n> Get default notification configuration.\n\nUse this as template when creating custom configurations.\n- **Calls**: router.get, NotificationConfig\n\n## Process Flows\n\nKey execution flows identified:\n\n### Flow 1: notification_stream\n```\nnotification_stream [wupbro.routers.notifications]\n  └─ →> get_notification_manager\n      └─ →> get_default_store\n```\n\n### Flow 2: dom_diff_capture\n```\ndom_diff_capture [wupbro.routers.drivers]\n```\n\n### Flow 3: main\n```\nmain [wupbro.__main__]\n```\n\n### Flow 4: browserless_screenshot\n```\nbrowserless_screenshot [wupbro.routers.drivers]\n```\n\n### Flow 5: list_events\n```\nlist_events [wupbro.routers.events]\n```\n\n### Flow 6: _detect_notification_types\n```\n_detect_notification_types [wupbro.notifications.NotificationManager]\n```\n\n### Flow 7: _create_payload\n```\n_create_payload [wupbro.notifications.NotificationManager]\n```\n\n### Flow 8: post_event\n```\npost_event [wupbro.routers.events]\n  └─ →> get_notification_manager\n      └─ →> get_default_store\n```\n\n### Flow 9: create_app\n```\ncreate_app [wupbro.main]\n```\n\n### Flow 10: process_event\n```\nprocess_event [wupbro.notifications.NotificationManager]\n```\n\n## Key Classes\n\n### wupbro.notifications.NotificationManager\n> Manages browser notification subscriptions and event detection.\n- **Methods**: 13\n- **Key Methods**: wupbro.notifications.NotificationManager.__init__, wupbro.notifications.NotificationManager.subscribe, wupbro.notifications.NotificationManager.unsubscribe, wupbro.notifications.NotificationManager.get_subscription, wupbro.notifications.NotificationManager.list_subscriptions, wupbro.notifications.NotificationManager.update_config, wupbro.notifications.NotificationManager.process_event, wupbro.notifications.NotificationManager._detect_notification_types, wupbro.notifications.NotificationManager._should_notify, wupbro.notifications.NotificationManager._create_payload\n\n### wupbro.storage.EventStore\n> Thread-safe ring buffer + JSONL persistence.\n- **Methods**: 6\n- **Key Methods**: wupbro.storage.EventStore.__init__, wupbro.storage.EventStore._load_existing, wupbro.storage.EventStore.add, wupbro.storage.EventStore.list, wupbro.storage.EventStore.clear, wupbro.storage.EventStore.stats\n\n### wupbro.models.Event\n> Generic WUP event posted by an agent.\n- **Methods**: 0\n- **Inherits**: BaseModel\n\n### wupbro.models.EventList\n- **Methods**: 0\n- **Inherits**: BaseModel\n\n### wupbro.models.DomDiffRequest\n- **Methods**: 0\n- **Inherits**: BaseModel\n\n### wupbro.models.ScreenshotRequest\n- **Methods**: 0\n- **Inherits**: BaseModel\n\n### wupbro.models.AnomalyReport\n- **Methods**: 0\n- **Inherits**: BaseModel\n\n### wupbro.models.NotificationConfig\n> Konfiguracja powiadomień przeglądarkowych dla użytkownika.\n- **Methods**: 0\n- **Inherits**: BaseModel\n\n### wupbro.models.NotificationSubscription\n> Subskrypcja powiadomień dla konkretnego klienta (przeglądarki).\n- **Methods**: 0\n- **Inherits**: BaseModel\n\n### wupbro.models.NotificationPayload\n> Payload wysyłany jako powiadomienie przeglądarkowe.\n- **Methods**: 0\n- **Inherits**: BaseModel\n\n## Data Transformation Functions\n\nKey functions that process and transform data:\n\n### wupbro.notifications.NotificationManager.process_event\n> Process event and generate notifications for matching subscriptions.\n\nReturns list of (subscription_\n- **Output to**: int, self._detect_notification_types, self._subscriptions.items, time.time, self._should_notify\n\n## Behavioral Patterns\n\n### recursion_list\n- **Type**: recursion\n- **Confidence**: 0.90\n- **Functions**: wupbro.storage.EventStore.list\n\n## Public API Surface\n\nFunctions exposed as public API (no underscore prefix):\n\n- `wupbro.routers.notifications.notification_stream` - 14 calls\n- `wupbro.routers.drivers.dom_diff_capture` - 13 calls\n- `wupbro.__main__.main` - 9 calls\n- `wupbro.routers.drivers.browserless_screenshot` - 8 calls\n- `wupbro.routers.events.list_events` - 8 calls\n- `wupbro.routers.events.post_event` - 7 calls\n- `wupbro.main.create_app` - 7 calls\n- `wupbro.notifications.NotificationManager.process_event` - 7 calls\n- `wupbro.routers.notifications.subscribe` - 6 calls\n- `wupbro.routers.notifications.send_test_notification` - 6 calls\n- `wupbro.storage.EventStore.add` - 5 calls\n- `wupbro.storage.EventStore.list` - 5 calls\n- `wupbro.routers.drivers.anomaly_report` - 4 calls\n- `wupbro.routers.notifications.get_subscription` - 4 calls\n- `wupbro.routers.notifications.update_subscription` - 4 calls\n- `wupbro.routers.notifications.unsubscribe` - 4 calls\n- `wupbro.storage.EventStore.clear` - 4 calls\n- `wupbro.routers.events.event_stats` - 3 calls\n- `wupbro.routers.events.clear_events` - 3 calls\n- `wupbro.routers.notifications.list_subscriptions` - 3 calls\n- `wupbro.routers.drivers.driver_health` - 2 calls\n- `wupbro.routers.dashboard.root` - 2 calls\n- `wupbro.routers.dashboard.dashboard` - 2 calls\n- `wupbro.notifications.NotificationManager.list_subscriptions` - 2 calls\n- `wupbro.notifications.NotificationManager.push_to_sse` - 2 calls\n- `wupbro.notifications.get_notification_manager` - 2 calls\n- `wupbro.routers.notifications.get_default_config` - 2 calls\n- `wupbro.storage.EventStore.stats` - 2 calls\n- `wupbro.storage.get_default_store` - 2 calls\n- `wupbro.notifications.NotificationManager.subscribe` - 1 calls\n- `wupbro.notifications.NotificationManager.get_subscription` - 1 calls\n- `wupbro.routers.notifications.get_notification_types` - 1 calls\n- `wupbro.routers.notifications.get_status_transition_types` - 1 calls\n- `wupbro.notifications.NotificationManager.unsubscribe` - 0 calls\n- `wupbro.notifications.NotificationManager.update_config` - 0 calls\n- `wupbro.notifications.NotificationManager.register_sse_client` - 0 calls\n- `wupbro.notifications.NotificationManager.unregister_sse_client` - 0 calls\n- `wupbro.notifications.set_notification_manager` - 0 calls\n- `wupbro.storage.set_default_store` - 0 calls\n\n## System Interactions\n\nHow components interact:\n\n```mermaid\ngraph TD\n    notification_stream --> get\n    notification_stream --> Query\n    notification_stream --> get_notification_man\n    notification_stream --> get_subscription\n    notification_stream --> register_sse_client\n    dom_diff_capture --> post\n    dom_diff_capture --> Depends\n    dom_diff_capture --> VisualDiffConfig\n    dom_diff_capture --> VisualDiffer\n    dom_diff_capture --> getcwd\n    main --> ArgumentParser\n    main --> add_argument\n    main --> parse_args\n    browserless_screensh --> post\n    browserless_screensh --> get\n    browserless_screensh --> AsyncClient\n    browserless_screensh --> HTTPException\n    list_events --> get\n    list_events --> Query\n    list_events --> Depends\n    _detect_notification --> append\n    _detect_notification --> get\n    _create_payload --> get\n    _create_payload --> NotificationPayload\n    post_event --> post\n    post_event --> Depends\n    post_event --> add\n    post_event --> get_notification_man\n    post_event --> process_event\n    create_app --> FastAPI\n```\n\n## Reverse Engineering Guidelines\n\n1. **Entry Points**: Start analysis from the entry points listed above\n2. **Core Logic**: Focus on classes with many methods\n3. **Data Flow**: Follow data transformation functions\n4. **Process Flows**: Use the flow diagrams for execution paths\n5. **API Surface**: Public API functions reveal the interface\n\n## Context for LLM\n\nMaintain the identified architectural patterns and public API surface when suggesting changes.", "is_subdir": false}, {"name": "calls.mmd", "rel_path": "calls.mmd", "path": "calls.mmd", "size": "2.2KB", "icon": "📈", "type": "mermaid", "type_name": "Mermaid", "content": "flowchart LR\n    subgraph wupbro__notifications\n        wupbro__notifications__get_notification_manager[&quot;get_notification_manager&quot;]\n        wupbro__notifications__NotificationManager__list_subscriptions[&quot;list_subscriptions&quot;]\n    end\n    subgraph wupbro__routers\n        wupbro__routers__notifications__unsubscribe[&quot;unsubscribe&quot;]\n        wupbro__routers__notifications__send_test_notification[&quot;send_test_notification&quot;]\n        wupbro__routers__notifications__subscribe[&quot;subscribe&quot;]\n        wupbro__routers__events___store[&quot;_store&quot;]\n        wupbro__routers__events__post_event[&quot;post_event&quot;]\n        wupbro__routers__notifications__notification_stream[&quot;notification_stream&quot;]\n        wupbro__routers__drivers___store[&quot;_store&quot;]\n        wupbro__routers__notifications__update_subscription[&quot;update_subscription&quot;]\n        wupbro__routers__notifications__list_subscriptions[&quot;list_subscriptions&quot;]\n        wupbro__routers__notifications__get_subscription[&quot;get_subscription&quot;]\n    end\n    subgraph wupbro__storage\n        wupbro__storage__get_default_store[&quot;get_default_store&quot;]\n        wupbro__storage__EventStore__list[&quot;list&quot;]\n    end\n    wupbro__routers__drivers___store --&gt; wupbro__storage__get_default_store\n    wupbro__routers__events___store --&gt; wupbro__storage__get_default_store\n    wupbro__routers__events__post_event --&gt; wupbro__notifications__get_notification_manager\n    wupbro__notifications__NotificationManager__list_subscriptions --&gt; wupbro__storage__EventStore__list\n    wupbro__notifications__get_notification_manager --&gt; wupbro__storage__get_default_store\n    wupbro__routers__notifications__subscribe --&gt; wupbro__notifications__get_notification_manager\n    wupbro__routers__notifications__list_subscriptions --&gt; wupbro__notifications__get_notification_manager\n    wupbro__routers__notifications__get_subscription --&gt; wupbro__notifications__get_notification_manager\n    wupbro__routers__notifications__update_subscription --&gt; wupbro__notifications__get_notification_manager\n    wupbro__routers__notifications__unsubscribe --&gt; wupbro__notifications__get_notification_manager\n    wupbro__routers__notifications__notification_stream --&gt; wupbro__notifications__get_notification_manager\n    wupbro__routers__notifications__send_test_notification --&gt; wupbro__notifications__get_notification_manager\n", "is_subdir": false}, {"name": "compact_flow.mmd", "rel_path": "compact_flow.mmd", "path": "compact_flow.mmd", "size": "318B", "icon": "📈", "type": "mermaid", "type_name": "Mermaid", "content": "flowchart TD\n    wupbro__notifications[&quot;wupbro.notifications&lt;br/&gt;15 funcs&quot;]\n    wupbro__routers[&quot;wupbro.routers&lt;br/&gt;22 funcs&quot;]\n    wupbro__storage[&quot;wupbro.storage&lt;br/&gt;8 funcs&quot;]\n    wupbro__routers ==&gt;|8| wupbro__notifications\n    wupbro__routers --&gt;|2| wupbro__storage\n    wupbro__notifications --&gt;|2| wupbro__storage\n", "is_subdir": false}, {"name": "flow.mmd", "rel_path": "flow.mmd", "path": "flow.mmd", "size": "1.4KB", "icon": "📈", "type": "mermaid", "type_name": "Mermaid", "content": "flowchart TD\n\n    %% Entry points (blue)\n    classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff\n\n    subgraph Core\n        wupbro__routers__drivers___store[&quot;_store&quot;]\n        wupbro__routers__drivers__dom_diff_capture[&quot;dom_diff_capture&quot;]\n        wupbro__routers__drivers__browserless_screenshot[&quot;browserless_screenshot&quot;]\n        wupbro__routers__drivers__anomaly_report[&quot;anomaly_report&quot;]\n        wupbro__routers__drivers__driver_health[&quot;driver_health&quot;]\n        wupbro__routers__events___store[&quot;_store&quot;]\n        wupbro__routers__events__post_event[&quot;post_event&quot;]\n        wupbro__routers__events__list_events[&quot;list_events&quot;]\n        wupbro__routers__events__event_stats[&quot;event_stats&quot;]\n        wupbro__routers__events__clear_events[&quot;clear_events&quot;]\n        wupbro____main____main[&quot;main&quot;]\n        wupbro__main__create_app[&quot;create_app&quot;]\n        wupbro__routers__dashboard__root[&quot;root&quot;]\n        wupbro__routers__dashboard__dashboard[&quot;dashboard&quot;]\n        wupbro__notifications__NotificationManager__subscribe[&quot;subscribe&quot;]\n        ...[&quot;+29 more&quot;]\n    end\n\n    class wupbro__routers__drivers___store,wupbro__routers__drivers__dom_diff_capture,wupbro__routers__drivers__browserless_screenshot,wupbro__routers__drivers__anomaly_report,wupbro__routers__drivers__driver_health,wupbro__routers__events___store,wupbro__routers__events__post_event,wupbro__routers__events__list_events,wupbro__routers__events__event_stats,wupbro__routers__events__clear_events entry\n", "is_subdir": false}, {"name": "prompt.txt", "rel_path": "prompt.txt", "path": "prompt.txt", "size": "2.9KB", "icon": "📄", "type": "text", "type_name": "Text", "content": "You are an AI assistant helping me understand and improve a codebase.\nUse the attached/generated files as the authoritative context.\nYour goal is to refactor the project based on these files, not just summarize it.\n\nwe are in project path: wupbro\n\nFiles for analysis:\n\nNote: project/validation.toon.yaml and project/duplication.toon.yaml are generated by external tools (vallm and redup)\n- analysis.toon.yaml  (Health diagnostics - complexity metrics, god modules, coupling issues, refactoring priorities) [2KB]\n- map.toon.yaml  (Structural map - files, sizes, imports, exports, signatures, project header) [3KB]\n- evolution.toon.yaml  (Refactoring queue - ranked actions by impact/effort, risks, metrics targets, history) [1KB]\n- project.toon.yaml  (Compact project overview - generated from project.yaml data) [1KB]\n- context.md  (LLM narrative - architecture summary and project context) [13KB]\n\nMissing files (not generated in this run):\n- README.md\n\nTask:\n- Treat this prompt as a refactoring brief: identify the highest-priority changes and prepare concrete edits.\n- Use the file set to decide whether the first pass should focus on correctness, duplication, complexity reduction, or architecture cleanup.\n- If you can safely implement the refactor, do it; otherwise give an exact file-by-file change plan and test plan.\n- Use analysis.toon.yaml to locate high-CC functions and god modules that should be split first.\n- Keep module boundaries intact and update imports/exports according to map.toon.yaml.\n- Use evolution.toon.yaml as the execution backlog and work from the top-ranked items.\n- Keep project.toon.yaml aligned with the refactored architecture.\n\nPriority Order:\nP1 — Split or simplify the highest-CC / god modules identified in analysis.toon.yaml.\nP1 — Preserve module boundaries and update imports/exports according to map.toon.yaml.\nP2 — Keep the compact project overview in project.toon.yaml aligned with the refactor.\nP2 — Execute the highest-impact items from evolution.toon.yaml in order of benefit/risk.\n\nFocus Areas for Analysis:\n1. **Code Health Analysis** - Review complexity metrics, god modules, coupling issues from analysis.toon.yaml\n2. **Structural Map** - Use map.toon.yaml to inspect imports, exports, signatures, and the project header\n3. **Refactoring Priorities** - Examine ranked refactoring actions and risk assessment from evolution.toon.yaml\n4. **Project Overview** - Review the compact project overview from project.toon.yaml\n\nAnalysis Strategy:\n- Start with analysis.toon.yaml for health metrics, then map.toon.yaml for structure and signatures\n- Review evolution.toon.yaml for action priorities and next steps\n- Compare the compact project overview in project.toon.yaml with the main analysis files\n\nConstraints:\n- Prefer minimal, incremental changes.\n- Maintain full backward compatibility.\n- Base recommendations on concrete metrics from the provided files.\n- If uncertain, ask clarifying questions.\n", "is_subdir": false}, {"name": "mermaid.export", "rel_path": "mermaid.export", "path": "mermaid.export", "size": "5.0KB", "icon": "📄", "type": "unknown", "type_name": "EXPORT", "content": "[Binary file]", "is_subdir": false}, {"name": "analysis.toon.yaml", "rel_path": "analysis.toon.yaml", "path": "analysis.toon.yaml", "size": "2.0KB", "icon": "⚙️", "type": "yaml", "type_name": "YAML", "content": "# code2llm | 15f 1677L | python:11,shell:2,toml:1,yaml:1 | 2026-04-29\n# CC̄=2.6 | critical:0/47 | dups:0 | cycles:1\n\nHEALTH[0]: ok\n\nREFACTOR[1]:\n  1. break 1 circular dependencies\n\nPIPELINES[37]:\n  [1] Src [_store]: _store → get_default_store\n      PURITY: 100% pure\n  [2] Src [dom_diff_capture]: dom_diff_capture\n      PURITY: 100% pure\n  [3] Src [browserless_screenshot]: browserless_screenshot\n      PURITY: 100% pure\n  [4] Src [anomaly_report]: anomaly_report\n      PURITY: 100% pure\n  [5] Src [driver_health]: driver_health\n      PURITY: 100% pure\n\nLAYERS:\n  wupbro/                         CC̄=2.6    ←in:10  →out:0\n  │ notifications              283L  1C   15m  CC=14     ←2\n  │ notifications              234L  0C   10m  CC=2      ←0\n  │ drivers                    129L  0C    5m  CC=3      ←0\n  │ models                     123L  8C    0m  CC=0.0    ←0\n  │ storage                    110L  1C    8m  CC=7      ←3\n  │ events                      65L  0C    5m  CC=2      ←0\n  │ main                        45L  0C    1m  CC=1      ←0\n  │ dashboard                   24L  0C    2m  CC=1      ←0\n  │ __main__                    21L  0C    1m  CC=1      ←0\n  │ __init__                     7L  0C    0m  CC=0.0    ←0\n  │ __init__                     1L  0C    0m  CC=0.0    ←0\n  │\n  ./                              CC̄=0.0    ←in:0  →out:0\n  │ !! goal.yaml                  511L  0C    0m  CC=0.0    ←0\n  │ pyproject.toml              74L  0C    0m  CC=0.0    ←0\n  │ project.sh                  49L  0C    0m  CC=0.0    ←0\n  │ tree.sh                      1L  0C    0m  CC=0.0    ←0\n  │\n\nCOUPLING:\n                          wupbro  wupbro.routers\n          wupbro              ──             ←10  hub\n  wupbro.routers              10              ──  !! fan-out\n  CYCLES: 1\n  HUB: wupbro/ (fan-in=10)\n  SMELL: wupbro.routers/ fan-out=10 → split needed\n\nEXTERNAL:\n  validation: run `vallm batch .` → validation.toon\n  duplication: run `redup scan .` → duplication.toon\n", "is_subdir": false}, {"name": "calls.toon.yaml", "rel_path": "calls.toon.yaml", "path": "calls.toon.yaml", "size": "2.8KB", "icon": "⚙️", "type": "yaml", "type_name": "YAML", "content": "# code2llm call graph | /home/tom/github/semcod/wupbro\n# nodes: 14 | edges: 12 | modules: 5\n# CC̄=2.6\n\nHUBS[20]:\n  wupbro.routers.notifications.notification_stream\n    CC=2  in:0  out:14  total:14\n  wupbro.notifications.get_notification_manager\n    CC=3  in:8  out:2  total:10\n  wupbro.routers.events.post_event\n    CC=2  in:0  out:7  total:7\n  wupbro.storage.EventStore.list\n    CC=7  in:2  out:5  total:7\n  wupbro.routers.notifications.send_test_notification\n    CC=2  in:0  out:6  total:6\n  wupbro.routers.notifications.subscribe\n    CC=2  in:0  out:6  total:6\n  wupbro.storage.get_default_store\n    CC=2  in:3  out:2  total:5\n  wupbro.routers.notifications.unsubscribe\n    CC=2  in:0  out:4  total:4\n  wupbro.routers.notifications.update_subscription\n    CC=2  in:0  out:4  total:4\n  wupbro.routers.notifications.get_subscription\n    CC=2  in:0  out:4  total:4\n  wupbro.routers.notifications.list_subscriptions\n    CC=1  in:0  out:3  total:3\n  wupbro.notifications.NotificationManager.list_subscriptions\n    CC=1  in:0  out:2  total:2\n  wupbro.routers.events._store\n    CC=1  in:0  out:1  total:1\n  wupbro.routers.drivers._store\n    CC=1  in:0  out:1  total:1\n\nMODULES:\n  wupbro.notifications  [2 funcs]\n    list_subscriptions  CC=1  out:2\n    get_notification_manager  CC=3  out:2\n  wupbro.routers.drivers  [1 funcs]\n    _store  CC=1  out:1\n  wupbro.routers.events  [2 funcs]\n    _store  CC=1  out:1\n    post_event  CC=2  out:7\n  wupbro.routers.notifications  [7 funcs]\n    get_subscription  CC=2  out:4\n    list_subscriptions  CC=1  out:3\n    notification_stream  CC=2  out:14\n    send_test_notification  CC=2  out:6\n    subscribe  CC=2  out:6\n    unsubscribe  CC=2  out:4\n    update_subscription  CC=2  out:4\n  wupbro.storage  [2 funcs]\n    list  CC=7  out:5\n    get_default_store  CC=2  out:2\n\nEDGES:\n  wupbro.routers.drivers._store → wupbro.storage.get_default_store\n  wupbro.routers.events._store → wupbro.storage.get_default_store\n  wupbro.routers.events.post_event → wupbro.notifications.get_notification_manager\n  wupbro.notifications.NotificationManager.list_subscriptions → wupbro.storage.EventStore.list\n  wupbro.notifications.get_notification_manager → wupbro.storage.get_default_store\n  wupbro.routers.notifications.subscribe → wupbro.notifications.get_notification_manager\n  wupbro.routers.notifications.list_subscriptions → wupbro.notifications.get_notification_manager\n  wupbro.routers.notifications.get_subscription → wupbro.notifications.get_notification_manager\n  wupbro.routers.notifications.update_subscription → wupbro.notifications.get_notification_manager\n  wupbro.routers.notifications.unsubscribe → wupbro.notifications.get_notification_manager\n  wupbro.routers.notifications.notification_stream → wupbro.notifications.get_notification_manager\n  wupbro.routers.notifications.send_test_notification → wupbro.notifications.get_notification_manager\n", "is_subdir": false}, {"name": "calls.yaml", "rel_path": "calls.yaml", "path": "calls.yaml", "size": "6.9KB", "icon": "⚙️", "type": "yaml", "type_name": "YAML", "content": "project: /home/tom/github/semcod/wupbro\ngenerated_from: code2llm call graph analysis\nstats:\n  total_nodes: 14\n  total_edges: 12\n  modules_count: 5\nnodes:\n  wupbro.routers.notifications.unsubscribe:\n    name: unsubscribe\n    module: wupbro.routers.notifications\n    line: 68\n    cyclomatic_complexity: 2\n    calls_out: 4\n    calls_in: 0\n  wupbro.notifications.get_notification_manager:\n    name: get_notification_manager\n    module: wupbro.notifications\n    line: 269\n    cyclomatic_complexity: 3\n    calls_out: 2\n    calls_in: 8\n  wupbro.routers.notifications.send_test_notification:\n    name: send_test_notification\n    module: wupbro.routers.notifications\n    line: 205\n    cyclomatic_complexity: 2\n    calls_out: 6\n    calls_in: 0\n  wupbro.routers.notifications.subscribe:\n    name: subscribe\n    module: wupbro.routers.notifications\n    line: 25\n    cyclomatic_complexity: 2\n    calls_out: 6\n    calls_in: 0\n  wupbro.routers.events._store:\n    name: _store\n    module: wupbro.routers.events\n    line: 23\n    cyclomatic_complexity: 1\n    calls_out: 1\n    calls_in: 0\n  wupbro.storage.get_default_store:\n    name: get_default_store\n    module: wupbro.storage\n    line: 101\n    cyclomatic_complexity: 2\n    calls_out: 2\n    calls_in: 3\n  wupbro.routers.events.post_event:\n    name: post_event\n    module: wupbro.routers.events\n    line: 28\n    cyclomatic_complexity: 2\n    calls_out: 7\n    calls_in: 0\n  wupbro.routers.notifications.notification_stream:\n    name: notification_stream\n    module: wupbro.routers.notifications\n    line: 148\n    cyclomatic_complexity: 2\n    calls_out: 14\n    calls_in: 0\n  wupbro.routers.drivers._store:\n    name: _store\n    module: wupbro.routers.drivers\n    line: 25\n    cyclomatic_complexity: 1\n    calls_out: 1\n    calls_in: 0\n  wupbro.notifications.NotificationManager.list_subscriptions:\n    name: list_subscriptions\n    module: wupbro.notifications\n    line: 66\n    cyclomatic_complexity: 1\n    calls_out: 2\n    calls_in: 0\n  wupbro.storage.EventStore.list:\n    name: list\n    module: wupbro.storage\n    line: 61\n    cyclomatic_complexity: 7\n    calls_out: 5\n    calls_in: 2\n  wupbro.routers.notifications.update_subscription:\n    name: update_subscription\n    module: wupbro.routers.notifications\n    line: 55\n    cyclomatic_complexity: 2\n    calls_out: 4\n    calls_in: 0\n  wupbro.routers.notifications.list_subscriptions:\n    name: list_subscriptions\n    module: wupbro.routers.notifications\n    line: 38\n    cyclomatic_complexity: 1\n    calls_out: 3\n    calls_in: 0\n  wupbro.routers.notifications.get_subscription:\n    name: get_subscription\n    module: wupbro.routers.notifications\n    line: 45\n    cyclomatic_complexity: 2\n    calls_out: 4\n    calls_in: 0\nedges:\n- caller: wupbro.routers.drivers._store\n  callee: wupbro.storage.get_default_store\n  call_type: resolved\n- caller: wupbro.routers.events._store\n  callee: wupbro.storage.get_default_store\n  call_type: resolved\n- caller: wupbro.routers.events.post_event\n  callee: wupbro.notifications.get_notification_manager\n  call_type: resolved\n- caller: wupbro.notifications.NotificationManager.list_subscriptions\n  callee: wupbro.storage.EventStore.list\n  call_type: resolved\n- caller: wupbro.notifications.get_notification_manager\n  callee: wupbro.storage.get_default_store\n  call_type: resolved\n- caller: wupbro.routers.notifications.subscribe\n  callee: wupbro.notifications.get_notification_manager\n  call_type: resolved\n- caller: wupbro.routers.notifications.list_subscriptions\n  callee: wupbro.notifications.get_notification_manager\n  call_type: resolved\n- caller: wupbro.routers.notifications.get_subscription\n  callee: wupbro.notifications.get_notification_manager\n  call_type: resolved\n- caller: wupbro.routers.notifications.update_subscription\n  callee: wupbro.notifications.get_notification_manager\n  call_type: resolved\n- caller: wupbro.routers.notifications.unsubscribe\n  callee: wupbro.notifications.get_notification_manager\n  call_type: resolved\n- caller: wupbro.routers.notifications.notification_stream\n  callee: wupbro.notifications.get_notification_manager\n  call_type: resolved\n- caller: wupbro.routers.notifications.send_test_notification\n  callee: wupbro.notifications.get_notification_manager\n  call_type: resolved\nmodules:\n  wupbro.notifications:\n  - wupbro.notifications.NotificationManager.list_subscriptions\n  - wupbro.notifications.get_notification_manager\n  wupbro.routers.drivers:\n  - wupbro.routers.drivers._store\n  wupbro.routers.events:\n  - wupbro.routers.events._store\n  - wupbro.routers.events.post_event\n  wupbro.routers.notifications:\n  - wupbro.routers.notifications.get_subscription\n  - wupbro.routers.notifications.list_subscriptions\n  - wupbro.routers.notifications.notification_stream\n  - wupbro.routers.notifications.send_test_notification\n  - wupbro.routers.notifications.subscribe\n  - wupbro.routers.notifications.unsubscribe\n  - wupbro.routers.notifications.update_subscription\n  wupbro.storage:\n  - wupbro.storage.EventStore.list\n  - wupbro.storage.get_default_store\nentry_points:\n- wupbro.__main__.main\n- wupbro.main.create_app\n- wupbro.notifications.NotificationManager.__init__\n- wupbro.notifications.NotificationManager._create_payload\n- wupbro.notifications.NotificationManager._detect_notification_types\n- wupbro.notifications.NotificationManager._should_notify\n- wupbro.notifications.NotificationManager.get_subscription\n- wupbro.notifications.NotificationManager.list_subscriptions\n- wupbro.notifications.NotificationManager.process_event\n- wupbro.notifications.NotificationManager.push_to_sse\n- wupbro.notifications.NotificationManager.register_sse_client\n- wupbro.notifications.NotificationManager.subscribe\n- wupbro.notifications.NotificationManager.unregister_sse_client\n- wupbro.notifications.NotificationManager.unsubscribe\n- wupbro.notifications.NotificationManager.update_config\n- wupbro.notifications.set_notification_manager\n- wupbro.routers.dashboard.dashboard\n- wupbro.routers.dashboard.root\n- wupbro.routers.drivers._store\n- wupbro.routers.drivers.anomaly_report\n- wupbro.routers.drivers.browserless_screenshot\n- wupbro.routers.drivers.dom_diff_capture\n- wupbro.routers.drivers.driver_health\n- wupbro.routers.events._store\n- wupbro.routers.events.clear_events\n- wupbro.routers.events.event_stats\n- wupbro.routers.events.list_events\n- wupbro.routers.events.post_event\n- wupbro.routers.notifications.get_default_config\n- wupbro.routers.notifications.get_notification_types\n- wupbro.routers.notifications.get_status_transition_types\n- wupbro.routers.notifications.get_subscription\n- wupbro.routers.notifications.list_subscriptions\n- wupbro.routers.notifications.notification_stream\n- wupbro.routers.notifications.send_test_notification\n- wupbro.routers.notifications.subscribe\n- wupbro.routers.notifications.unsubscribe\n- wupbro.routers.notifications.update_subscription\n- wupbro.storage.EventStore.__init__\n- wupbro.storage.EventStore._load_existing\n- wupbro.storage.EventStore.add\n- wupbro.storage.EventStore.clear\n- wupbro.storage.EventStore.stats\n- wupbro.storage.set_default_store\n", "is_subdir": false}, {"name": "evolution.toon.yaml", "rel_path": "evolution.toon.yaml", "path": "evolution.toon.yaml", "size": "1.4KB", "icon": "⚙️", "type": "yaml", "type_name": "YAML", "content": "# code2llm/evolution | 47 func | 8f | 2026-04-29\n\nNEXT[0]: no refactoring needed\n\nRISKS[0]: none\n\nMETRICS-TARGET:\n  CC̄:          2.6 → ≤1.8\n  max-CC:      14 → ≤7\n  god-modules: 0 → 0\n  high-CC(≥15): 0 → ≤0\n  hub-types:   0 → ≤0\n\nPATTERNS (language parser shared logic):\n  _extract_declarations() in base.py — unified extraction for:\n    - TypeScript: interfaces, types, classes, functions, arrow funcs\n    - PHP: namespaces, traits, classes, functions, includes\n    - Ruby: modules, classes, methods, requires\n    - C++: classes, structs, functions, #includes\n    - C#: classes, interfaces, methods, usings\n    - Java: classes, interfaces, methods, imports\n    - Go: packages, functions, structs\n    - Rust: modules, functions, traits, use statements\n\n  Shared regex patterns per language:\n    - import: language-specific import/require/using patterns\n    - class: class/struct/trait declarations with inheritance\n    - function: function/method signatures with visibility\n    - brace_tracking: for C-family languages ({ })\n    - end_keyword_tracking: for Ruby (module/class/def...end)\n\n  Benefits:\n    - Consistent extraction logic across all languages\n    - Reduced code duplication (~70% reduction in parser LOC)\n    - Easier maintenance: fix once, apply everywhere\n    - Standardized FunctionInfo/ClassInfo models\n\nHISTORY:\n  (first run — no previous data)\n", "is_subdir": false}, {"name": "map.toon.yaml", "rel_path": "map.toon.yaml", "path": "map.toon.yaml", "size": "3.5KB", "icon": "⚙️", "type": "yaml", "type_name": "YAML", "content": "# wupbro | 15f 1677L | shell:2,toml:1,yaml:1,python:11 | 2026-04-29\n# stats: 47 func | 0 cls | 15 mod | CC̄=2.6 | critical:0 | cycles:0\n# alerts[2]: fan-out notification_stream=13; fan-out dom_diff_capture=12\n# hotspots[5]: notification_stream fan=13; dom_diff_capture fan=12; browserless_screenshot fan=7; post_event fan=7; NotificationManager.process_event fan=7\n# evolution: baseline\n# Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods\nM[15]:\n  goal.yaml,511\n  project.sh,49\n  pyproject.toml,74\n  tree.sh,1\n  wupbro/__init__.py,7\n  wupbro/__main__.py,21\n  wupbro/main.py,45\n  wupbro/models.py,123\n  wupbro/notifications.py,283\n  wupbro/routers/__init__.py,1\n  wupbro/routers/dashboard.py,24\n  wupbro/routers/drivers.py,129\n  wupbro/routers/events.py,65\n  wupbro/routers/notifications.py,234\n  wupbro/storage.py,110\nD:\n  wupbro/notifications.py:\n    e: NotificationManager,get_notification_manager,set_notification_manager\n    NotificationManager: __init__(1),subscribe(2),unsubscribe(1),get_subscription(1),list_subscriptions(0),update_config(2),process_event(1),_detect_notification_types(2),_should_notify(2),_create_payload(2),register_sse_client(1),unregister_sse_client(1),push_to_sse(1)  # Manages browser notification subscriptions and event detecti...\n    get_notification_manager(store)\n    set_notification_manager(manager)\n  wupbro/storage.py:\n    e: EventStore,get_default_store,set_default_store\n    EventStore: __init__(2),_load_existing(0),add(1),list(3),clear(0),stats(0)  # Thread-safe ring buffer + JSONL persistence...\n    get_default_store()\n    set_default_store(store)\n  wupbro/routers/drivers.py:\n    e: _store,dom_diff_capture,browserless_screenshot,anomaly_report,driver_health\n    _store()\n    dom_diff_capture(req;store)\n    browserless_screenshot(req)\n    anomaly_report(report;store)\n    driver_health()\n  wupbro/routers/events.py:\n    e: _store,post_event,list_events,event_stats,clear_events\n    _store()\n    post_event(event;store)\n    list_events(type;service;limit;store)\n    event_stats(store)\n    clear_events(store)\n  wupbro/routers/notifications.py:\n    e: subscribe,list_subscriptions,get_subscription,update_subscription,unsubscribe,get_default_config,get_notification_types,get_status_transition_types,notification_stream,send_test_notification\n    subscribe(config)\n    list_subscriptions()\n    get_subscription(subscription_id)\n    update_subscription(subscription_id;config)\n    unsubscribe(subscription_id)\n    get_default_config()\n    get_notification_types()\n    get_status_transition_types()\n    notification_stream(subscription_id)\n    send_test_notification(subscription_id;background_tasks)\n  wupbro/__main__.py:\n    e: main\n    main()\n  wupbro/main.py:\n    e: create_app\n    create_app()\n  wupbro/routers/dashboard.py:\n    e: root,dashboard\n    root(request)\n    dashboard(request)\n  tree.sh:\n  project.sh:\n  pyproject.toml:\n  goal.yaml:\n  wupbro/routers/__init__.py:\n  wupbro/__init__.py:\n  wupbro/models.py:\n    e: Event,EventList,DomDiffRequest,ScreenshotRequest,AnomalyReport,NotificationConfig,NotificationSubscription,NotificationPayload\n    Event(BaseModel):  # Generic WUP event posted by an agent...\n    EventList(BaseModel):\n    DomDiffRequest(BaseModel):\n    ScreenshotRequest(BaseModel):\n    AnomalyReport(BaseModel):\n    NotificationConfig(BaseModel):  # Konfiguracja powiadomień przeglądarkowych dla użytkownika...\n    NotificationSubscription(BaseModel):  # Subskrypcja powiadomień dla konkretnego klienta (przeglądark...\n    NotificationPayload(BaseModel):  # Payload wysyłany jako powiadomienie przeglądarkowe...\n", "is_subdir": false}, {"name": "project.toon.yaml", "rel_path": "project.toon.yaml", "path": "project.toon.yaml", "size": "1.6KB", "icon": "⚙️", "type": "yaml", "type_name": "YAML", "content": "# wupbro | 47 func | 8f | 2204L | python | 2026-04-29\n\nHEALTH:\n  CC̄=2.6  critical=2 (limit:10)  dup=0  cycles=1\n\nALERTS[2]:\n  !   high_fan_out     notification_stream = 13 (limit:10)\n  !   high_fan_out     dom_diff_capture = 12 (limit:10)\n\nMODULES[15] (top by size):\n  M[goal.yaml] 511L C:0 F:0 CC↑0 D:0 (yaml)\n  M[wupbro/notifications.py] 283L C:1 F:15 CC↑14 D:2 (python)\n  M[wupbro/routers/notifications.py] 234L C:0 F:10 CC↑2 D:0 (python)\n  M[wupbro/routers/drivers.py] 129L C:0 F:5 CC↑3 D:0 (python)\n  M[wupbro/models.py] 123L C:8 F:0 CC↑0 D:0 (python)\n  M[wupbro/storage.py] 110L C:1 F:8 CC↑7 D:3 (python)\n  M[pyproject.toml] 74L C:0 F:0 CC↑0 D:0 (toml)\n  M[wupbro/routers/events.py] 65L C:0 F:5 CC↑2 D:0 (python)\n  M[project.sh] 49L C:0 F:0 CC↑0 D:0 (shell)\n  M[wupbro/main.py] 45L C:0 F:1 CC↑1 D:0 (python)\n  M[wupbro/routers/dashboard.py] 24L C:0 F:2 CC↑1 D:0 (python)\n  M[wupbro/__main__.py] 21L C:0 F:1 CC↑1 D:0 (python)\n  M[wupbro/__init__.py] 7L C:0 F:0 CC↑0 D:0 (python)\n  M[tree.sh] 1L C:0 F:0 CC↑0 D:0 (shell)\n  M[wupbro/routers/__init__.py] 1L C:0 F:0 CC↑0 D:0 (python)\n  LANGS: python:11/shell:2/yaml:1/toml:1\n\nHOTSPOTS[2]:\n  ★ notification_stream fan=13  // Server-Sent Events endpoint for real-time notifications.\n\nConnect to this endpoi\n  ★ dom_diff_capture fan=12  // Trigger a one-shot DOM snapshot + diff against the previous snapshot.\n\nRequires:\n\nREFACTOR[2]:\n  [1] H/H Split god module goal.yaml (511L, 0 classes)\n  [2] M/L Break circular dependency: wupbro.storage.EventStore.list\n\nEVOLUTION:\n  2026-04-29 CC̄=2.6 crit=2 2204L // Automated analysis\n", "is_subdir": false}];
+        let currentFile = null;
+
+        function renderFileList(filter = '') {
+            const list = document.getElementById('fileList');
+            const filtered = files.filter(f =>
+                f.name.toLowerCase().includes(filter.toLowerCase()) ||
+                f.path.toLowerCase().includes(filter.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty-state">No files found</div>';
+                return;
+            }
+
+            // Group by type
+            const groups = {};
+            for (const file of filtered) {
+                const type = file.type_name;
+                if (!groups[type]) groups[type] = [];
+                groups[type].push(file);
+            }
+
+            let html = '';
+            for (const [typeName, groupFiles] of Object.entries(groups)) {
+                html += `
+                    <div class="file-group">
+                        <div class="file-group-title">${typeName} Files (${groupFiles.length})</div>
+                        ${groupFiles.map(f => `
+                            <div class="file-item ${currentFile?.name === f.name ? 'active' : ''}"
+                                 onclick="selectFile('${f.name}')">
+                                <span class="file-icon">${f.icon}</span>
+                                <div class="file-info">
+                                    <div class="file-name">${f.name}</div>
+                                    <div class="file-meta">${f.path}</div>
+                                </div>
+                                <span class="file-size">${f.size}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            list.innerHTML = html;
+        }
+
+        function selectFile(name) {
+            const file = files.find(f => f.name === name);
+            if (!file) return;
+
+            currentFile = file;
+
+            document.getElementById('contentIcon').textContent = file.icon;
+            document.getElementById('contentTitle').textContent = file.name;
+
+            // Actions
+            const actions = document.getElementById('contentActions');
+            actions.innerHTML = `
+                <a href="${file.rel_path}" download class="btn">⬇ Download</a>
+                <a href="${file.rel_path}" target="_blank" class="btn btn-primary">↗ Open Raw</a>
+            `;
+
+            // Content
+            const body = document.getElementById('contentBody');
+            if (file.type === 'markdown') {
+                // Render markdown as HTML using marked.js
+                body.innerHTML = `<div class="markdown-content">${marked.parse(file.content)}</div>`;
+            } else if (file.type === 'html') {
+                // For HTML files, show in iframe for safety
+                body.innerHTML = `<iframe src="${file.rel_path}" style="width:100%;height:100%;border:none;border-radius:0.5rem;"></iframe>`;
+            } else if (file.type === 'image') {
+                // For images, display the actual image
+                body.innerHTML = `<div class="image-preview"><img src="${file.rel_path}" alt="${file.name}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:0.5rem;"></div>`;
+            } else if (file.type === 'mermaid') {
+                // Render mermaid diagram
+                const diagramId = 'mermaid-diagram-' + Date.now();
+                body.innerHTML = `<div class="mermaid-content"><pre class="mermaid" id="${diagramId}">${file.content}</pre></div>`;
+                // Initialize mermaid on the new element
+                setTimeout(() => {
+                    mermaid.init(undefined, document.getElementById(diagramId));
+                }, 0);
+            } else if (file.type === 'json') {
+                try {
+                    const json = JSON.parse(file.content.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
+                    const formatted = JSON.stringify(json, null, 2);
+                    body.innerHTML = `<pre><code class="language-json">${formatted.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+                    hljs.highlightElement(body.querySelector('code'));
+                } catch {
+                    body.innerHTML = `<pre>${file.content}</pre>`;
+                }
+            } else if (file.type === 'yaml') {
+                // YAML with syntax highlighting
+                body.innerHTML = `<pre><code class="language-yaml">${file.content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+                hljs.highlightElement(body.querySelector('code'));
+            } else if (file.type === 'toon') {
+                // TOON with simple highlighting (use ini as closest match for key: value format)
+                body.innerHTML = `<pre><code class="language-ini">${file.content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+                hljs.highlightElement(body.querySelector('code'));
+            } else if (file.type === 'code') {
+                // Code files with auto-highlighting
+                body.innerHTML = `<pre><code>${file.content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+                hljs.highlightElement(body.querySelector('code'));
+            } else {
+                body.innerHTML = `<pre>${file.content}</pre>`;
+            }
+
+            renderFileList(document.getElementById('search').value);
+        }
+
+        function filterFiles(query) {
+            renderFileList(query);
+        }
+
+        function renderStats() {
+            const stats = {};
+            for (const f of files) {
+                stats[f.type_name] = (stats[f.type_name] || 0) + 1;
+            }
+
+            const grid = document.getElementById('statsGrid');
+            grid.innerHTML = Object.entries(stats)
+                .sort((a, b) => b[1] - a[1])
+                .map(([type, count]) => `
+                    <div class="stat-card">
+                        <div class="stat-value">${count}</div>
+                        <div class="stat-label">${type}</div>
+                    </div>
+                `).join('');
+        }
+
+        // Initialize
+        renderStats();
+        renderFileList();
+
+        // Select first file if available
+        if (files.length > 0) {
+            selectFile(files[0].name);
+        }
+    </script>
+</body>
+</html>

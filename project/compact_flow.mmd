@@ -1,0 +1,7 @@
+flowchart TD
+    wupbro__notifications["wupbro.notifications<br/>15 funcs"]
+    wupbro__routers["wupbro.routers<br/>22 funcs"]
+    wupbro__storage["wupbro.storage<br/>8 funcs"]
+    wupbro__routers ==>|8| wupbro__notifications
+    wupbro__routers -->|2| wupbro__storage
+    wupbro__notifications -->|2| wupbro__storage

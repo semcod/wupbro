@@ -1,0 +1,25 @@
+flowchart TD
+
+    %% Entry points (blue)
+    classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
+
+    subgraph Core
+        wupbro__routers__drivers___store["_store"]
+        wupbro__routers__drivers__dom_diff_capture["dom_diff_capture"]
+        wupbro__routers__drivers__browserless_screenshot["browserless_screenshot"]
+        wupbro__routers__drivers__anomaly_report["anomaly_report"]
+        wupbro__routers__drivers__driver_health["driver_health"]
+        wupbro__routers__events___store["_store"]
+        wupbro__routers__events__post_event["post_event"]
+        wupbro__routers__events__list_events["list_events"]
+        wupbro__routers__events__event_stats["event_stats"]
+        wupbro__routers__events__clear_events["clear_events"]
+        wupbro____main____main["main"]
+        wupbro__main__create_app["create_app"]
+        wupbro__routers__dashboard__root["root"]
+        wupbro__routers__dashboard__dashboard["dashboard"]
+        wupbro__notifications__NotificationManager__subscribe["subscribe"]
+        ...["+29 more"]
+    end
+
+    class wupbro__routers__drivers___store,wupbro__routers__drivers__dom_diff_capture,wupbro__routers__drivers__browserless_screenshot,wupbro__routers__drivers__anomaly_report,wupbro__routers__drivers__driver_health,wupbro__routers__events___store,wupbro__routers__events__post_event,wupbro__routers__events__list_events,wupbro__routers__events__event_stats,wupbro__routers__events__clear_events entry

@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>WUP Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --green: #3fb950;
+      --red: #f85149;
+      --yellow: #d29922;
+      --blue: #58a6ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 18px; margin: 0; }
+    header .badge {
+      padding: 2px 8px; border-radius: 12px; background: var(--panel);
+      color: var(--muted); font-size: 12px;
+    }
+    header .badge.active { color: var(--green); border: 1px solid var(--green); }
+    header .badge.inactive { color: var(--red); border: 1px solid var(--red); }
+    main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+    .stats { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat {
+      flex: 1; min-width: 120px;
+      padding: 16px; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+    .stat .value { font-size: 24px; font-weight: 600; margin-top: 4px; }
+    .stat.regression .value { color: var(--red); }
+    .stat.pass .value { color: var(--green); }
+    .stat.anomaly .value { color: var(--yellow); }
+    .stat.diff .value { color: var(--blue); }
+
+    table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 8px; overflow: hidden; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+    th { background: #1c2129; color: var(--muted); font-weight: 500; text-transform: uppercase; font-size: 11px; }
+    tr:last-child td { border-bottom: none; }
+
+    .type-tag {
+      padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500;
+      display: inline-block; min-width: 70px; text-align: center;
+    }
+    .type-REGRESSION { background: rgba(248,81,73,.15); color: var(--red); }
+    .type-PASS { background: rgba(63,185,80,.15); color: var(--green); }
+    .type-ANOMALY { background: rgba(210,153,34,.15); color: var(--yellow); }
+    .type-VISUAL_DIFF { background: rgba(88,166,255,.15); color: var(--blue); }
+    .type-HEALTH_TRANSITION { background: rgba(125,133,144,.15); color: var(--muted); }
+
+    .controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+    button, select, input {
+      background: var(--panel); color: var(--text); border: 1px solid var(--border);
+      padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer;
+    }
+    button:hover { background: #1c2129; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.primary { border-color: var(--blue); color: var(--blue); }
+    button.success { border-color: var(--green); color: var(--green); }
+    button.danger { border-color: var(--red); color: var(--red); }
+    .muted { color: var(--muted); }
+    .empty { text-align: center; padding: 40px; color: var(--muted); }
+
+    /* Notification panel styles */
+    .notification-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: none;
+    }
+    .notification-panel.visible { display: block; }
+    .notification-panel h3 {
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .notification-config {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 12px;
+    }
+    .config-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .config-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .config-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    .config-group input[type="number"] {
+      width: 60px;
+      padding: 4px 8px;
+    }
+    .config-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .subscription-id {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--bg);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🔬 WUP Dashboard</h1>
+    <span class="badge" id="status">connecting…</span>
+    <span class="badge muted" id="last-update">—</span>
+    <span class="badge" id="notif-status">🔕 Powiadomienia wyłączone</span>
+    <button id="btn-enable-notif" class="primary" onclick="enableNotifications()">🔔 Włącz powiadomienia</button>
+    <button id="btn-config-notif" onclick="toggleConfigPanel()">⚙️ Konfiguracja</button>
+    <button id="btn-test-notif" onclick="sendTestNotification()">🧪 Test</button>
+  </header>
+  <main>
+    <!-- Notification Configuration Panel -->
+    <div id="notification-panel" class="notification-panel">
+      <h3>🔔 Konfiguracja powiadomień <span id="sub-id" class="subscription-id"></span></h3>
+      <div class="notification-config">
+        <div class="config-group">
+          <strong>🚨 Regresje</strong>
+          <label><input type="checkbox" id="cfg-regression-new" checked> Nowa regresja</label>
+          <label><input type="checkbox" id="cfg-regression-diff"> Kolejna regresja (≤30s)</label>
+          <label><input type="checkbox" id="cfg-pass-recovery" checked> Odzyskanie (fail→pass)</label>
+        </div>
+        <div class="config-group">
+          <strong>🔄 Zmiany stanu</strong>
+          <label><input type="checkbox" id="cfg-status-transition" checked> Dowolna zmiana</label>
+          <label><input type="checkbox" id="cfg-health-change" checked> Zdrowie usługi</label>
+          <label><input type="checkbox" id="cfg-anomaly-new" checked> Nowa anomalia</label>
+        </div>
+        <div class="config-group">
+          <strong>👁️ Inne</strong>
+          <label><input type="checkbox" id="cfg-visual-diff"> Różnica wizualna</label>
+          <div class="config-row">
+            <label>Cooldown (s): <input type="number" id="cfg-cooldown" value="5" min="0" max="60"></label>
+          </div>
+          <div class="config-row" style="margin-top: 8px;">
+            <button class="success" onclick="saveNotificationConfig()">💾 Zapisz</button>
+            <button onclick="toggleConfigPanel()">✕ Zamknij</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+    <div class="controls">
+      <select id="filter-type">
+        <option value="">All types</option>
+        <option value="REGRESSION">Regression</option>
+        <option value="PASS">Pass</option>
+        <option value="ANOMALY">Anomaly</option>
+        <option value="VISUAL_DIFF">Visual diff</option>
+        <option value="HEALTH_TRANSITION">Health transition</option>
+      </select>
+      <button onclick="refresh()">↻ Refresh</button>
+      <button onclick="clearAll()" class="danger">⌫ Clear</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th><th>Type</th><th>Service</th>
+          <th>Endpoint / URL</th><th>Status</th><th>Reason</th>
+        </tr>
+      </thead>
+      <tbody id="rows">
+        <tr><td colspan="6" class="empty">Loading…</td></tr>
+      </tbody>
+    </table>
+  </main>
+
+<script>
+const fmtTime = (ts) => new Date(ts * 1000).toLocaleTimeString();
+
+// Notification state
+let notificationEnabled = false;
+let subscriptionId = localStorage.getItem('wupbro_subscription_id');
+let eventSource = null;
+let notificationConfig = {
+  regression_new: true,
+  regression_diff: false,
+  pass_recovery: true,
+  status_transition: true,
+  health_change: true,
+  anomaly_new: true,
+  visual_diff_new: false,
+  cooldown_seconds: 5
+};
+
+// Initialize notification config from localStorage
+const savedConfig = localStorage.getItem('wupbro_notification_config');
+if (savedConfig) {
+  notificationConfig = JSON.parse(savedConfig);
+  applyConfigToUI();
+}
+
+function applyConfigToUI() {
+  document.getElementById('cfg-regression-new').checked = notificationConfig.regression_new;
+  document.getElementById('cfg-regression-diff').checked = notificationConfig.regression_diff;
+  document.getElementById('cfg-pass-recovery').checked = notificationConfig.pass_recovery;
+  document.getElementById('cfg-status-transition').checked = notificationConfig.status_transition;
+  document.getElementById('cfg-health-change').checked = notificationConfig.health_change;
+  document.getElementById('cfg-anomaly-new').checked = notificationConfig.anomaly_new;
+  document.getElementById('cfg-visual-diff').checked = notificationConfig.visual_diff_new;
+  document.getElementById('cfg-cooldown').value = notificationConfig.cooldown_seconds;
+}
+
+function getConfigFromUI() {
+  return {
+    enabled: true,
+    regression_new: document.getElementById('cfg-regression-new').checked,
+    regression_diff: document.getElementById('cfg-regression-diff').checked,
+    pass_recovery: document.getElementById('cfg-pass-recovery').checked,
+    status_transition: document.getElementById('cfg-status-transition').checked,
+    health_change: document.getElementById('cfg-health-change').checked,
+    anomaly_new: document.getElementById('cfg-anomaly-new').checked,
+    visual_diff_new: document.getElementById('cfg-visual-diff').checked,
+    cooldown_seconds: parseInt(document.getElementById('cfg-cooldown').value) || 5
+  };
+}
+
+async function enableNotifications() {
+  if (!('Notification' in window)) {
+    alert('Twoja przeglądarka nie obsługuje powiadomień.');
+    return;
+  }
+  
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') {
+    alert('Musisz zezwolić na powiadomienia, aby korzystać z tej funkcji.');
+    return;
+  }
+  
+  notificationEnabled = true;
+  updateNotificationUI();
+  
+  // Create or update subscription
+  await createOrUpdateSubscription();
+  
+  // Connect to SSE
+  connectSSE();
+}
+
+async function createOrUpdateSubscription() {
+  const config = getConfigFromUI();
+  
+  if (subscriptionId) {
+    // Update existing subscription
+    try {
+      const response = await fetch(`/notifications/subscriptions/${subscriptionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      if (!response.ok) {
+        // Subscription not found, create new
+        subscriptionId = null;
+      }
+    } catch (e) {
+      subscriptionId = null;
+    }
+  }
+  
+  if (!subscriptionId) {
+    // Create new subscription
+    try {
+      const response = await fetch('/notifications/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      const data = await response.json();
+      subscriptionId = data.subscription_id;
+      localStorage.setItem('wupbro_subscription_id', subscriptionId);
+    } catch (e) {
+      console.error('Failed to create subscription:', e);
+    }
+  }
+  
+  // Display subscription ID
+  document.getElementById('sub-id').textContent = subscriptionId || '';
+}
+
+function connectSSE() {
+  if (!subscriptionId) return;
+  
+  if (eventSource) {
+    eventSource.close();
+  }
+  
+  eventSource = new EventSource(`/notifications/stream?subscription_id=${subscriptionId}`);
+  
+  eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'connected') {
+      console.log('SSE connected:', data);
+      return;
+    }
+    
+    // Show browser notification
+    if (notificationEnabled && data.title) {
+      showBrowserNotification(data);
+    }
+  };
+  
+  eventSource.onerror = (err) => {
+    console.error('SSE error:', err);
+    // Try to reconnect after 5 seconds
+    setTimeout(() => {
+      if (notificationEnabled) connectSSE();
+    }, 5000);
+  };
+}
+
+function showBrowserNotification(data) {
+  const notification = new Notification(data.title, {
+    body: data.body,
+    icon: data.icon || '/favicon.ico',
+    tag: data.notification_type,
+    data: data
+  });
+  
+  notification.onclick = () => {
+    window.focus();
+    notification.close();
+  };
+}
+
+function updateNotificationUI() {
+  const statusBadge = document.getElementById('notif-status');
+  const enableBtn = document.getElementById('btn-enable-notif');
+  const configBtn = document.getElementById('btn-config-notif');
+  const testBtn = document.getElementById('btn-test-notif');
+  
+  if (notificationEnabled) {
+    statusBadge.textContent = '🔔 Powiadomienia włączone';
+    statusBadge.className = 'badge active';
+    enableBtn.textContent = '🔕 Wyłącz powiadomienia';
+    enableBtn.onclick = disableNotifications;
+    configBtn.disabled = false;
+    testBtn.disabled = false;
+  } else {
+    statusBadge.textContent = '🔕 Powiadomienia wyłączone';
+    statusBadge.className = 'badge inactive';
+    enableBtn.textContent = '🔔 Włącz powiadomienia';
+    enableBtn.onclick = enableNotifications;
+    configBtn.disabled = true;
+    testBtn.disabled = true;
+  }
+}
+
+function disableNotifications() {
+  notificationEnabled = false;
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
+  updateNotificationUI();
+}
+
+function toggleConfigPanel() {
+  const panel = document.getElementById('notification-panel');
+  panel.classList.toggle('visible');
+}
+
+async function saveNotificationConfig() {
+  notificationConfig = getConfigFromUI();
+  localStorage.setItem('wupbro_notification_config', JSON.stringify(notificationConfig));
+  
+  if (notificationEnabled) {
+    await createOrUpdateSubscription();
+  }
+  
+  alert('Konfiguracja zapisana!');
+  toggleConfigPanel();
+}
+
+async function sendTestNotification() {
+  if (!subscriptionId) {
+    alert('Najpierw włącz powiadomienia.');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/notifications/test?subscription_id=${subscriptionId}`, {
+      method: 'POST'
+    });
+    const data = await response.json();
+    alert('Powiadomienie testowe wysłane! Powinno pojawić się za chwilę.');
+  } catch (e) {
+    alert('Błąd wysyłania powiadomienia testowego.');
+  }
+}
+
+// Initialize UI on page load
+function initNotificationUI() {
+  applyConfigToUI();
+  updateNotificationUI();
+  
+  // Check if notifications were previously enabled
+  if (subscriptionId && 'Notification' in window && Notification.permission === 'granted') {
+    notificationEnabled = true;
+    updateNotificationUI();
+    connectSSE();
+  }
+}
+
+async function fetchEvents() {
+  const filter = document.getElementById("filter-type").value;
+  const url = filter ? `/events?type=${filter}&limit=200` : "/events?limit=200";
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function fetchStats() {
+  const r = await fetch("/events/stats");
+  return r.json();
+}
+
+function renderStats(stats) {
+  const types = ["REGRESSION", "PASS", "ANOMALY", "VISUAL_DIFF", "HEALTH_TRANSITION"];
+  const cls = { REGRESSION: "regression", PASS: "pass", ANOMALY: "anomaly", VISUAL_DIFF: "diff", HEALTH_TRANSITION: "" };
+  const labels = { REGRESSION: "Regressions", PASS: "Passes", ANOMALY: "Anomalies", VISUAL_DIFF: "Visual diffs", HEALTH_TRANSITION: "Health" };
+  const container = document.getElementById("stats");
+  const totalCard = `<div class="stat"><div class="label">Total events</div><div class="value">${stats.total}</div></div>`;
+  const cards = types.map(t => {
+    const v = (stats.by_type && stats.by_type[t]) || 0;
+    return `<div class="stat ${cls[t] || ""}"><div class="label">${labels[t]}</div><div class="value">${v}</div></div>`;
+  });
+  container.innerHTML = totalCard + cards.join("");
+}
+
+function renderRows(items) {
+  const tbody = document.getElementById("rows");
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">No events yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = items.map(e => `
+    <tr>
+      <td class="muted">${fmtTime(e.timestamp)}</td>
+      <td><span class="type-tag type-${e.type}">${e.type}</span></td>
+      <td>${e.service || "—"}</td>
+      <td class="muted">${e.endpoint || e.url || "—"}</td>
+      <td>${e.status || "—"}</td>
+      <td class="muted">${e.reason || "—"}</td>
+    </tr>
+  `).join("");
+}
+
+async function refresh() {
+  try {
+    const [events, stats] = await Promise.all([fetchEvents(), fetchStats()]);
+    renderStats(stats);
+    renderRows(events.items);
+    document.getElementById("status").textContent = "live";
+    document.getElementById("status").style.color = "var(--green)";
+    document.getElementById("last-update").textContent = "updated " + new Date().toLocaleTimeString();
+  } catch (err) {
+    document.getElementById("status").textContent = "offline";
+    document.getElementById("status").style.color = "var(--red)";
+  }
+}
+
+async function clearAll() {
+  if (!confirm("Clear all events?")) return;
+  await fetch("/events", { method: "DELETE" });
+  refresh();
+}
+
+// Initialize
+document.getElementById("filter-type").addEventListener("change", refresh);
+initNotificationUI();
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>

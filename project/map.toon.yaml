@@ -1,0 +1,85 @@
+# wupbro | 15f 1677L | shell:2,toml:1,yaml:1,python:11 | 2026-04-29
+# stats: 47 func | 0 cls | 15 mod | CC̄=2.6 | critical:0 | cycles:0
+# alerts[2]: fan-out notification_stream=13; fan-out dom_diff_capture=12
+# hotspots[5]: notification_stream fan=13; dom_diff_capture fan=12; browserless_screenshot fan=7; post_event fan=7; NotificationManager.process_event fan=7
+# evolution: baseline
+# Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
+M[15]:
+  goal.yaml,511
+  project.sh,49
+  pyproject.toml,74
+  tree.sh,1
+  wupbro/__init__.py,7
+  wupbro/__main__.py,21
+  wupbro/main.py,45
+  wupbro/models.py,123
+  wupbro/notifications.py,283
+  wupbro/routers/__init__.py,1
+  wupbro/routers/dashboard.py,24
+  wupbro/routers/drivers.py,129
+  wupbro/routers/events.py,65
+  wupbro/routers/notifications.py,234
+  wupbro/storage.py,110
+D:
+  wupbro/notifications.py:
+    e: NotificationManager,get_notification_manager,set_notification_manager
+    NotificationManager: __init__(1),subscribe(2),unsubscribe(1),get_subscription(1),list_subscriptions(0),update_config(2),process_event(1),_detect_notification_types(2),_should_notify(2),_create_payload(2),register_sse_client(1),unregister_sse_client(1),push_to_sse(1)  # Manages browser notification subscriptions and event detecti...
+    get_notification_manager(store)
+    set_notification_manager(manager)
+  wupbro/storage.py:
+    e: EventStore,get_default_store,set_default_store
+    EventStore: __init__(2),_load_existing(0),add(1),list(3),clear(0),stats(0)  # Thread-safe ring buffer + JSONL persistence...
+    get_default_store()
+    set_default_store(store)
+  wupbro/routers/drivers.py:
+    e: _store,dom_diff_capture,browserless_screenshot,anomaly_report,driver_health
+    _store()
+    dom_diff_capture(req;store)
+    browserless_screenshot(req)
+    anomaly_report(report;store)
+    driver_health()
+  wupbro/routers/events.py:
+    e: _store,post_event,list_events,event_stats,clear_events
+    _store()
+    post_event(event;store)
+    list_events(type;service;limit;store)
+    event_stats(store)
+    clear_events(store)
+  wupbro/routers/notifications.py:
+    e: subscribe,list_subscriptions,get_subscription,update_subscription,unsubscribe,get_default_config,get_notification_types,get_status_transition_types,notification_stream,send_test_notification
+    subscribe(config)
+    list_subscriptions()
+    get_subscription(subscription_id)
+    update_subscription(subscription_id;config)
+    unsubscribe(subscription_id)
+    get_default_config()
+    get_notification_types()
+    get_status_transition_types()
+    notification_stream(subscription_id)
+    send_test_notification(subscription_id;background_tasks)
+  wupbro/__main__.py:
+    e: main
+    main()
+  wupbro/main.py:
+    e: create_app
+    create_app()
+  wupbro/routers/dashboard.py:
+    e: root,dashboard
+    root(request)
+    dashboard(request)
+  tree.sh:
+  project.sh:
+  pyproject.toml:
+  goal.yaml:
+  wupbro/routers/__init__.py:
+  wupbro/__init__.py:
+  wupbro/models.py:
+    e: Event,EventList,DomDiffRequest,ScreenshotRequest,AnomalyReport,NotificationConfig,NotificationSubscription,NotificationPayload
+    Event(BaseModel):  # Generic WUP event posted by an agent...
+    EventList(BaseModel):
+    DomDiffRequest(BaseModel):
+    ScreenshotRequest(BaseModel):
+    AnomalyReport(BaseModel):
+    NotificationConfig(BaseModel):  # Konfiguracja powiadomień przeglądarkowych dla użytkownika...
+    NotificationSubscription(BaseModel):  # Subskrypcja powiadomień dla konkretnego klienta (przeglądark...
+    NotificationPayload(BaseModel):  # Payload wysyłany jako powiadomienie przeglądarkowe...

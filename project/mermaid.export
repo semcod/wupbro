@@ -1,0 +1,74 @@
+flowchart TD
+    subgraph wupbro____main__
+        wupbro____main____main["main"]
+    end
+    subgraph wupbro__main
+        wupbro__main__create_app["create_app"]
+    end
+    subgraph wupbro__notifications
+        wupbro__notifications__NotificationManager____init__["__init__"]
+        wupbro__notifications__NotificationManager__subscribe["subscribe"]
+        wupbro__notifications__NotificationManager__unsubscribe["unsubscribe"]
+        wupbro__notifications__NotificationManager__get_subscription["get_subscription"]
+        wupbro__notifications__NotificationManager__list_subscriptions["list_subscriptions"]
+        wupbro__notifications__NotificationManager__update_config["update_config"]
+        wupbro__notifications__NotificationManager__process_event("process_event CC=12")
+        wupbro__notifications__NotificationManager___detect_notification_types("_detect_notification_types CC=14")
+        wupbro__notifications__NotificationManager___should_notify("_should_notify CC=8")
+        wupbro__notifications__NotificationManager___create_payload["_create_payload"]
+        wupbro__notifications__NotificationManager__register_sse_client["register_sse_client"]
+        wupbro__notifications__NotificationManager__unregister_sse_client["unregister_sse_client"]
+        wupbro__notifications__NotificationManager__push_to_sse["push_to_sse"]
+        wupbro__notifications__get_notification_manager["get_notification_manager"]
+        wupbro__notifications__set_notification_manager["set_notification_manager"]
+    end
+    subgraph wupbro__routers
+        wupbro__routers__drivers___store["_store"]
+        wupbro__routers__drivers__dom_diff_capture["dom_diff_capture"]
+        wupbro__routers__drivers__browserless_screenshot["browserless_screenshot"]
+        wupbro__routers__drivers__anomaly_report["anomaly_report"]
+        wupbro__routers__drivers__driver_health["driver_health"]
+        wupbro__routers__events___store["_store"]
+        wupbro__routers__events__post_event["post_event"]
+        wupbro__routers__events__list_events["list_events"]
+        wupbro__routers__events__event_stats["event_stats"]
+        wupbro__routers__events__clear_events["clear_events"]
+        wupbro__routers__dashboard__root["root"]
+        wupbro__routers__dashboard__dashboard["dashboard"]
+        wupbro__routers__notifications__subscribe["subscribe"]
+        wupbro__routers__notifications__list_subscriptions["list_subscriptions"]
+        wupbro__routers__notifications__get_subscription["get_subscription"]
+        wupbro__routers__notifications__update_subscription["update_subscription"]
+        wupbro__routers__notifications__unsubscribe["unsubscribe"]
+        wupbro__routers__notifications__get_default_config["get_default_config"]
+        wupbro__routers__notifications__get_notification_types["get_notification_types"]
+        wupbro__routers__notifications__get_status_transition_types["get_status_transition_types"]
+        wupbro__routers__notifications__notification_stream["notification_stream"]
+        wupbro__routers__notifications__send_test_notification["send_test_notification"]
+    end
+    subgraph wupbro__storage
+        wupbro__storage__EventStore____init__["__init__"]
+        wupbro__storage__EventStore___load_existing["_load_existing"]
+        wupbro__storage__EventStore__add["add"]
+        wupbro__storage__EventStore__list["list"]
+        wupbro__storage__EventStore__clear["clear"]
+        wupbro__storage__EventStore__stats["stats"]
+        wupbro__storage__get_default_store["get_default_store"]
+        wupbro__storage__set_default_store["set_default_store"]
+    end
+    wupbro__routers__drivers___store --> wupbro__storage__get_default_store
+    wupbro__routers__events___store --> wupbro__storage__get_default_store
+    wupbro__routers__events__post_event --> wupbro__notifications__get_notification_manager
+    wupbro__notifications__NotificationManager__list_subscriptions --> wupbro__storage__EventStore__list
+    wupbro__notifications__get_notification_manager --> wupbro__storage__get_default_store
+    wupbro__routers__notifications__subscribe --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__list_subscriptions --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__get_subscription --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__update_subscription --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__unsubscribe --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__notification_stream --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__send_test_notification --> wupbro__notifications__get_notification_manager
+
+    classDef highCC fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef medCC fill:#ffd43b,stroke:#f08c00,color:#000
+    class wupbro__notifications__NotificationManager__process_event,wupbro__notifications__NotificationManager___detect_notification_types,wupbro__notifications__NotificationManager___should_notify medCC

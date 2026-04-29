@@ -1,0 +1,41 @@
+# wupbro | 47 func | 8f | 2204L | python | 2026-04-29
+
+HEALTH:
+  CC̄=2.6  critical=2 (limit:10)  dup=0  cycles=1
+
+ALERTS[2]:
+  !   high_fan_out     notification_stream = 13 (limit:10)
+  !   high_fan_out     dom_diff_capture = 12 (limit:10)
+
+MODULES[15] (top by size):
+  M[goal.yaml] 511L C:0 F:0 CC↑0 D:0 (yaml)
+  M[wupbro/notifications.py] 283L C:1 F:15 CC↑14 D:2 (python)
+  M[wupbro/routers/notifications.py] 234L C:0 F:10 CC↑2 D:0 (python)
+  M[wupbro/routers/drivers.py] 129L C:0 F:5 CC↑3 D:0 (python)
+  M[wupbro/models.py] 123L C:8 F:0 CC↑0 D:0 (python)
+  M[wupbro/storage.py] 110L C:1 F:8 CC↑7 D:3 (python)
+  M[pyproject.toml] 74L C:0 F:0 CC↑0 D:0 (toml)
+  M[wupbro/routers/events.py] 65L C:0 F:5 CC↑2 D:0 (python)
+  M[project.sh] 49L C:0 F:0 CC↑0 D:0 (shell)
+  M[wupbro/main.py] 45L C:0 F:1 CC↑1 D:0 (python)
+  M[wupbro/routers/dashboard.py] 24L C:0 F:2 CC↑1 D:0 (python)
+  M[wupbro/__main__.py] 21L C:0 F:1 CC↑1 D:0 (python)
+  M[wupbro/__init__.py] 7L C:0 F:0 CC↑0 D:0 (python)
+  M[tree.sh] 1L C:0 F:0 CC↑0 D:0 (shell)
+  M[wupbro/routers/__init__.py] 1L C:0 F:0 CC↑0 D:0 (python)
+  LANGS: python:11/shell:2/yaml:1/toml:1
+
+HOTSPOTS[2]:
+  ★ notification_stream fan=13  // Server-Sent Events endpoint for real-time notifications.
+
+Connect to this endpoi
+  ★ dom_diff_capture fan=12  // Trigger a one-shot DOM snapshot + diff against the previous snapshot.
+
+Requires:
+
+REFACTOR[2]:
+  [1] H/H Split god module goal.yaml (511L, 0 classes)
+  [2] M/L Break circular dependency: wupbro.storage.EventStore.list
+
+EVOLUTION:
+  2026-04-29 CC̄=2.6 crit=2 2204L // Automated analysis

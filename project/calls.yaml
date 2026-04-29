@@ -1,0 +1,207 @@
+project: /home/tom/github/semcod/wupbro
+generated_from: code2llm call graph analysis
+stats:
+  total_nodes: 14
+  total_edges: 12
+  modules_count: 5
+nodes:
+  wupbro.routers.notifications.unsubscribe:
+    name: unsubscribe
+    module: wupbro.routers.notifications
+    line: 68
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  wupbro.notifications.get_notification_manager:
+    name: get_notification_manager
+    module: wupbro.notifications
+    line: 269
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 8
+  wupbro.routers.notifications.send_test_notification:
+    name: send_test_notification
+    module: wupbro.routers.notifications
+    line: 205
+    cyclomatic_complexity: 2
+    calls_out: 6
+    calls_in: 0
+  wupbro.routers.notifications.subscribe:
+    name: subscribe
+    module: wupbro.routers.notifications
+    line: 25
+    cyclomatic_complexity: 2
+    calls_out: 6
+    calls_in: 0
+  wupbro.routers.events._store:
+    name: _store
+    module: wupbro.routers.events
+    line: 23
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  wupbro.storage.get_default_store:
+    name: get_default_store
+    module: wupbro.storage
+    line: 101
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 3
+  wupbro.routers.events.post_event:
+    name: post_event
+    module: wupbro.routers.events
+    line: 28
+    cyclomatic_complexity: 2
+    calls_out: 7
+    calls_in: 0
+  wupbro.routers.notifications.notification_stream:
+    name: notification_stream
+    module: wupbro.routers.notifications
+    line: 148
+    cyclomatic_complexity: 2
+    calls_out: 14
+    calls_in: 0
+  wupbro.routers.drivers._store:
+    name: _store
+    module: wupbro.routers.drivers
+    line: 25
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  wupbro.notifications.NotificationManager.list_subscriptions:
+    name: list_subscriptions
+    module: wupbro.notifications
+    line: 66
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  wupbro.storage.EventStore.list:
+    name: list
+    module: wupbro.storage
+    line: 61
+    cyclomatic_complexity: 7
+    calls_out: 5
+    calls_in: 2
+  wupbro.routers.notifications.update_subscription:
+    name: update_subscription
+    module: wupbro.routers.notifications
+    line: 55
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  wupbro.routers.notifications.list_subscriptions:
+    name: list_subscriptions
+    module: wupbro.routers.notifications
+    line: 38
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  wupbro.routers.notifications.get_subscription:
+    name: get_subscription
+    module: wupbro.routers.notifications
+    line: 45
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+edges:
+- caller: wupbro.routers.drivers._store
+  callee: wupbro.storage.get_default_store
+  call_type: resolved
+- caller: wupbro.routers.events._store
+  callee: wupbro.storage.get_default_store
+  call_type: resolved
+- caller: wupbro.routers.events.post_event
+  callee: wupbro.notifications.get_notification_manager
+  call_type: resolved
+- caller: wupbro.notifications.NotificationManager.list_subscriptions
+  callee: wupbro.storage.EventStore.list
+  call_type: resolved
+- caller: wupbro.notifications.get_notification_manager
+  callee: wupbro.storage.get_default_store
+  call_type: resolved
+- caller: wupbro.routers.notifications.subscribe
+  callee: wupbro.notifications.get_notification_manager
+  call_type: resolved
+- caller: wupbro.routers.notifications.list_subscriptions
+  callee: wupbro.notifications.get_notification_manager
+  call_type: resolved
+- caller: wupbro.routers.notifications.get_subscription
+  callee: wupbro.notifications.get_notification_manager
+  call_type: resolved
+- caller: wupbro.routers.notifications.update_subscription
+  callee: wupbro.notifications.get_notification_manager
+  call_type: resolved
+- caller: wupbro.routers.notifications.unsubscribe
+  callee: wupbro.notifications.get_notification_manager
+  call_type: resolved
+- caller: wupbro.routers.notifications.notification_stream
+  callee: wupbro.notifications.get_notification_manager
+  call_type: resolved
+- caller: wupbro.routers.notifications.send_test_notification
+  callee: wupbro.notifications.get_notification_manager
+  call_type: resolved
+modules:
+  wupbro.notifications:
+  - wupbro.notifications.NotificationManager.list_subscriptions
+  - wupbro.notifications.get_notification_manager
+  wupbro.routers.drivers:
+  - wupbro.routers.drivers._store
+  wupbro.routers.events:
+  - wupbro.routers.events._store
+  - wupbro.routers.events.post_event
+  wupbro.routers.notifications:
+  - wupbro.routers.notifications.get_subscription
+  - wupbro.routers.notifications.list_subscriptions
+  - wupbro.routers.notifications.notification_stream
+  - wupbro.routers.notifications.send_test_notification
+  - wupbro.routers.notifications.subscribe
+  - wupbro.routers.notifications.unsubscribe
+  - wupbro.routers.notifications.update_subscription
+  wupbro.storage:
+  - wupbro.storage.EventStore.list
+  - wupbro.storage.get_default_store
+entry_points:
+- wupbro.__main__.main
+- wupbro.main.create_app
+- wupbro.notifications.NotificationManager.__init__
+- wupbro.notifications.NotificationManager._create_payload
+- wupbro.notifications.NotificationManager._detect_notification_types
+- wupbro.notifications.NotificationManager._should_notify
+- wupbro.notifications.NotificationManager.get_subscription
+- wupbro.notifications.NotificationManager.list_subscriptions
+- wupbro.notifications.NotificationManager.process_event
+- wupbro.notifications.NotificationManager.push_to_sse
+- wupbro.notifications.NotificationManager.register_sse_client
+- wupbro.notifications.NotificationManager.subscribe
+- wupbro.notifications.NotificationManager.unregister_sse_client
+- wupbro.notifications.NotificationManager.unsubscribe
+- wupbro.notifications.NotificationManager.update_config
+- wupbro.notifications.set_notification_manager
+- wupbro.routers.dashboard.dashboard
+- wupbro.routers.dashboard.root
+- wupbro.routers.drivers._store
+- wupbro.routers.drivers.anomaly_report
+- wupbro.routers.drivers.browserless_screenshot
+- wupbro.routers.drivers.dom_diff_capture
+- wupbro.routers.drivers.driver_health
+- wupbro.routers.events._store
+- wupbro.routers.events.clear_events
+- wupbro.routers.events.event_stats
+- wupbro.routers.events.list_events
+- wupbro.routers.events.post_event
+- wupbro.routers.notifications.get_default_config
+- wupbro.routers.notifications.get_notification_types
+- wupbro.routers.notifications.get_status_transition_types
+- wupbro.routers.notifications.get_subscription
+- wupbro.routers.notifications.list_subscriptions
+- wupbro.routers.notifications.notification_stream
+- wupbro.routers.notifications.send_test_notification
+- wupbro.routers.notifications.subscribe
+- wupbro.routers.notifications.unsubscribe
+- wupbro.routers.notifications.update_subscription
+- wupbro.storage.EventStore.__init__
+- wupbro.storage.EventStore._load_existing
+- wupbro.storage.EventStore.add
+- wupbro.storage.EventStore.clear
+- wupbro.storage.EventStore.stats
+- wupbro.storage.set_default_store

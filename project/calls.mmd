@@ -1,0 +1,33 @@
+flowchart LR
+    subgraph wupbro__notifications
+        wupbro__notifications__get_notification_manager["get_notification_manager"]
+        wupbro__notifications__NotificationManager__list_subscriptions["list_subscriptions"]
+    end
+    subgraph wupbro__routers
+        wupbro__routers__notifications__unsubscribe["unsubscribe"]
+        wupbro__routers__notifications__send_test_notification["send_test_notification"]
+        wupbro__routers__notifications__subscribe["subscribe"]
+        wupbro__routers__events___store["_store"]
+        wupbro__routers__events__post_event["post_event"]
+        wupbro__routers__notifications__notification_stream["notification_stream"]
+        wupbro__routers__drivers___store["_store"]
+        wupbro__routers__notifications__update_subscription["update_subscription"]
+        wupbro__routers__notifications__list_subscriptions["list_subscriptions"]
+        wupbro__routers__notifications__get_subscription["get_subscription"]
+    end
+    subgraph wupbro__storage
+        wupbro__storage__get_default_store["get_default_store"]
+        wupbro__storage__EventStore__list["list"]
+    end
+    wupbro__routers__drivers___store --> wupbro__storage__get_default_store
+    wupbro__routers__events___store --> wupbro__storage__get_default_store
+    wupbro__routers__events__post_event --> wupbro__notifications__get_notification_manager
+    wupbro__notifications__NotificationManager__list_subscriptions --> wupbro__storage__EventStore__list
+    wupbro__notifications__get_notification_manager --> wupbro__storage__get_default_store
+    wupbro__routers__notifications__subscribe --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__list_subscriptions --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__get_subscription --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__update_subscription --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__unsubscribe --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__notification_stream --> wupbro__notifications__get_notification_manager
+    wupbro__routers__notifications__send_test_notification --> wupbro__notifications__get_notification_manager

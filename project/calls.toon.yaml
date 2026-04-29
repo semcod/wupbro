@@ -1,0 +1,68 @@
+# code2llm call graph | /home/tom/github/semcod/wupbro
+# nodes: 14 | edges: 12 | modules: 5
+# CC̄=2.6
+
+HUBS[20]:
+  wupbro.routers.notifications.notification_stream
+    CC=2  in:0  out:14  total:14
+  wupbro.notifications.get_notification_manager
+    CC=3  in:8  out:2  total:10
+  wupbro.routers.events.post_event
+    CC=2  in:0  out:7  total:7
+  wupbro.storage.EventStore.list
+    CC=7  in:2  out:5  total:7
+  wupbro.routers.notifications.send_test_notification
+    CC=2  in:0  out:6  total:6
+  wupbro.routers.notifications.subscribe
+    CC=2  in:0  out:6  total:6
+  wupbro.storage.get_default_store
+    CC=2  in:3  out:2  total:5
+  wupbro.routers.notifications.unsubscribe
+    CC=2  in:0  out:4  total:4
+  wupbro.routers.notifications.update_subscription
+    CC=2  in:0  out:4  total:4
+  wupbro.routers.notifications.get_subscription
+    CC=2  in:0  out:4  total:4
+  wupbro.routers.notifications.list_subscriptions
+    CC=1  in:0  out:3  total:3
+  wupbro.notifications.NotificationManager.list_subscriptions
+    CC=1  in:0  out:2  total:2
+  wupbro.routers.events._store
+    CC=1  in:0  out:1  total:1
+  wupbro.routers.drivers._store
+    CC=1  in:0  out:1  total:1
+
+MODULES:
+  wupbro.notifications  [2 funcs]
+    list_subscriptions  CC=1  out:2
+    get_notification_manager  CC=3  out:2
+  wupbro.routers.drivers  [1 funcs]
+    _store  CC=1  out:1
+  wupbro.routers.events  [2 funcs]
+    _store  CC=1  out:1
+    post_event  CC=2  out:7
+  wupbro.routers.notifications  [7 funcs]
+    get_subscription  CC=2  out:4
+    list_subscriptions  CC=1  out:3
+    notification_stream  CC=2  out:14
+    send_test_notification  CC=2  out:6
+    subscribe  CC=2  out:6
+    unsubscribe  CC=2  out:4
+    update_subscription  CC=2  out:4
+  wupbro.storage  [2 funcs]
+    list  CC=7  out:5
+    get_default_store  CC=2  out:2
+
+EDGES:
+  wupbro.routers.drivers._store → wupbro.storage.get_default_store
+  wupbro.routers.events._store → wupbro.storage.get_default_store
+  wupbro.routers.events.post_event → wupbro.notifications.get_notification_manager
+  wupbro.notifications.NotificationManager.list_subscriptions → wupbro.storage.EventStore.list
+  wupbro.notifications.get_notification_manager → wupbro.storage.get_default_store
+  wupbro.routers.notifications.subscribe → wupbro.notifications.get_notification_manager
+  wupbro.routers.notifications.list_subscriptions → wupbro.notifications.get_notification_manager
+  wupbro.routers.notifications.get_subscription → wupbro.notifications.get_notification_manager
+  wupbro.routers.notifications.update_subscription → wupbro.notifications.get_notification_manager
+  wupbro.routers.notifications.unsubscribe → wupbro.notifications.get_notification_manager
+  wupbro.routers.notifications.notification_stream → wupbro.notifications.get_notification_manager
+  wupbro.routers.notifications.send_test_notification → wupbro.notifications.get_notification_manager

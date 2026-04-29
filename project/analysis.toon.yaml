@@ -1,0 +1,52 @@
+# code2llm | 15f 1677L | python:11,shell:2,toml:1,yaml:1 | 2026-04-29
+# CC̄=2.6 | critical:0/47 | dups:0 | cycles:1
+
+HEALTH[0]: ok
+
+REFACTOR[1]:
+  1. break 1 circular dependencies
+
+PIPELINES[37]:
+  [1] Src [_store]: _store → get_default_store
+      PURITY: 100% pure
+  [2] Src [dom_diff_capture]: dom_diff_capture
+      PURITY: 100% pure
+  [3] Src [browserless_screenshot]: browserless_screenshot
+      PURITY: 100% pure
+  [4] Src [anomaly_report]: anomaly_report
+      PURITY: 100% pure
+  [5] Src [driver_health]: driver_health
+      PURITY: 100% pure
+
+LAYERS:
+  wupbro/                         CC̄=2.6    ←in:10  →out:0
+  │ notifications              283L  1C   15m  CC=14     ←2
+  │ notifications              234L  0C   10m  CC=2      ←0
+  │ drivers                    129L  0C    5m  CC=3      ←0
+  │ models                     123L  8C    0m  CC=0.0    ←0
+  │ storage                    110L  1C    8m  CC=7      ←3
+  │ events                      65L  0C    5m  CC=2      ←0
+  │ main                        45L  0C    1m  CC=1      ←0
+  │ dashboard                   24L  0C    2m  CC=1      ←0
+  │ __main__                    21L  0C    1m  CC=1      ←0
+  │ __init__                     7L  0C    0m  CC=0.0    ←0
+  │ __init__                     1L  0C    0m  CC=0.0    ←0
+  │
+  ./                              CC̄=0.0    ←in:0  →out:0
+  │ !! goal.yaml                  511L  0C    0m  CC=0.0    ←0
+  │ pyproject.toml              74L  0C    0m  CC=0.0    ←0
+  │ project.sh                  49L  0C    0m  CC=0.0    ←0
+  │ tree.sh                      1L  0C    0m  CC=0.0    ←0
+  │
+
+COUPLING:
+                          wupbro  wupbro.routers
+          wupbro              ──             ←10  hub
+  wupbro.routers              10              ──  !! fan-out
+  CYCLES: 1
+  HUB: wupbro/ (fan-in=10)
+  SMELL: wupbro.routers/ fan-out=10 → split needed
+
+EXTERNAL:
+  validation: run `vallm batch .` → validation.toon
+  duplication: run `redup scan .` → duplication.toon
