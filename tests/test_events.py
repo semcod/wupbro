@@ -4,14 +4,17 @@ from __future__ import annotations
 
 
 def test_post_event_accepted(client):
-    resp = client.post("/events", json={
-        "type": "REGRESSION",
-        "service": "users",
-        "file": "app/users/routes.py",
-        "endpoint": "/api/users",
-        "status": "fail",
-        "reason": "boom",
-    })
+    resp = client.post(
+        "/events",
+        json={
+            "type": "REGRESSION",
+            "service": "users",
+            "file": "app/users/routes.py",
+            "endpoint": "/api/users",
+            "status": "fail",
+            "reason": "boom",
+        },
+    )
     assert resp.status_code == 201
     body = resp.json()
     assert body["accepted"] is True
@@ -85,11 +88,14 @@ def test_clear_events(client):
 
 
 def test_event_extra_fields_preserved(client):
-    client.post("/events", json={
-        "type": "VISUAL_DIFF",
-        "service": "users",
-        "url": "http://localhost/users",
-        "diff": {"status": "changed", "counts": {"added": 5}},
-    })
+    client.post(
+        "/events",
+        json={
+            "type": "VISUAL_DIFF",
+            "service": "users",
+            "url": "http://localhost/users",
+            "diff": {"status": "changed", "counts": {"added": 5}},
+        },
+    )
     body = client.get("/events").json()
     assert body["items"][0]["diff"]["counts"]["added"] == 5
