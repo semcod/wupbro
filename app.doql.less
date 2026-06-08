@@ -2,7 +2,10 @@
 
 app {
   name: wupbro;
-  version: 0.1.10;
+  version: 0.1.11;
+  description: "WUP Browser Dashboard — FastAPI backend for WUP regression watcher";
+  license: Apache-2.0;
+  authors: "WUP contributors, Tom Sapletta <tom@sapletta.com>";
 }
 
 dependencies {
@@ -68,7 +71,15 @@ interface[type="cli"] {
   framework: argparse;
 }
 interface[type="cli"] page[name="wupbro"] {
+  entry: wupbro.__main__:main;
+}
 
+tests {
+  import: testql-scenarios/**/*.testql.toon.yaml;
+}
+
+env_vars {
+  keys: OPENROUTER_API_KEY, LLM_MODEL, PFIX_AUTO_APPLY, PFIX_AUTO_INSTALL_DEPS, PFIX_AUTO_RESTART, PFIX_MAX_RETRIES, PFIX_DRY_RUN, PFIX_ENABLED, PFIX_GIT_COMMIT, PFIX_GIT_PREFIX, PFIX_CREATE_BACKUPS;
 }
 
 deploy {
@@ -78,5 +89,9 @@ deploy {
 environment[name="local"] {
   runtime: python;
   env_file: .env;
+  template_file: .env.example;
   python_version: >=3.9;
+  vars: LLM_MODEL, OPENROUTER_API_KEY, PFIX_AUTO_APPLY, PFIX_AUTO_INSTALL_DEPS, PFIX_AUTO_RESTART, PFIX_CREATE_BACKUPS, PFIX_DRY_RUN, PFIX_ENABLED, PFIX_GIT_COMMIT, PFIX_GIT_PREFIX, PFIX_MAX_RETRIES;
+  runtime_llm: OPENROUTER_API_KEY;
+  runtime_pfix: PFIX_AUTO_APPLY, PFIX_AUTO_INSTALL_DEPS, PFIX_AUTO_RESTART, PFIX_CREATE_BACKUPS, PFIX_DRY_RUN, PFIX_ENABLED, PFIX_GIT_COMMIT, PFIX_GIT_PREFIX, PFIX_MAX_RETRIES;
 }
