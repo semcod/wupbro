@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, Response
 
 from ..models import Event, EventList
 from ..notifications import get_notification_manager
@@ -60,6 +60,7 @@ async def event_stats(store: EventStore = Depends(_store)) -> dict:
     return store.stats()
 
 
-@router.delete("", status_code=204)
-async def clear_events(store: EventStore = Depends(_store)) -> None:
+@router.delete("")
+async def clear_events(store: EventStore = Depends(_store)):
     store.clear()
+    return Response(status_code=204)
