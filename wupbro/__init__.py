@@ -1,6 +1,6 @@
 """WUP Browser Dashboard — FastAPI backend for WUP regression watcher."""
 
-__version__ = "0.1.12"
+__version__ = "0.1.13"
 
 from .main import create_app, app
 
