@@ -237,7 +237,7 @@ publishing:
 strategies:
   python:
     test: pytest tests/ -v
-    build: python -m build
+    build: uv build
     publish: twine upload dist/wupbro-{version}*
     publish_enabled: true
     dependencies:
