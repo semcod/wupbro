@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wupbro"
-version = "0.1.14"
+version = "0.1.15"
 description = "WUP Browser Dashboard — FastAPI backend for WUP regression watcher"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -70,3 +70,9 @@ max_commits = 500
 
 # Cost thresholds for badge colors (USD)
 badge_color_thresholds = { low = 1.0, medium = 5.0, high = 10.0, critical = 50.0 }
+
+[dependency-groups]
+dev = [
+    "build>=1.5.0",
+    "twine>=6.2.0",
+]
