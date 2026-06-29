@@ -1,0 +1,8 @@
+{"type":"PASS","service":"backend","file":null,"endpoint":null,"url":null,"status":"ok","stage":"quick","reason":null,"diff":null,"timestamp":1779028547}
+{"type":"REGRESSION","service":"backend","file":"backend/routes.py","endpoint":"/api/v3/health","url":null,"status":"fail","stage":"quick","reason":"TestQL exit code 1 — health check failed","diff":null,"timestamp":1779028547}
+{"type":"HEALTH_TRANSITION","service":"backend","file":null,"endpoint":null,"url":null,"status":null,"stage":null,"reason":null,"diff":null,"timestamp":1779028547,"from":"up","to":"down"}
+{"type":"REGRESSION","service":"firmware","file":"backend/firmware/api.py","endpoint":"/firmware/api/v1/health","url":null,"status":"fail","stage":"probe","reason":"Connection refused: firmware service is down","diff":null,"timestamp":1779028582}
+{"type":"REGRESSION","service":"backend","file":"backend/api.py","endpoint":"/api/v3/health","url":null,"status":"fail","stage":"quick","reason":"Health check timeout","diff":null,"timestamp":1779028621}
+{"type":"REGRESSION","service":"firmware","file":"backend/firmware/route0.py","endpoint":"/firmware/api/v1/health","url":null,"status":"fail","stage":"quick","reason":"Test cooldown 1","diff":null,"timestamp":1779028633}
+{"type":"REGRESSION","service":"firmware","file":"backend/firmware/route1.py","endpoint":"/firmware/api/v1/health","url":null,"status":"fail","stage":"quick","reason":"Test cooldown 2","diff":null,"timestamp":1779028633}
+{"type":"REGRESSION","service":"firmware","file":"backend/firmware/route2.py","endpoint":"/firmware/api/v1/health","url":null,"status":"fail","stage":"quick","reason":"Test cooldown 3","diff":null,"timestamp":1779028634}

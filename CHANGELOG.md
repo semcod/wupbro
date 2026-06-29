@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-06-29
+
+### Docs
+- Update README.md
+
+### Other
+- Update .wupbro/events.jsonl
+
 ## [0.1.11] - 2026-04-29
 
 ### Docs
