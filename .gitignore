@@ -218,3 +218,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+.code2llm_cache/
+.github/
+.wupbro/
