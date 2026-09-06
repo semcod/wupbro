@@ -23,7 +23,6 @@ dev = [
     "pytest>=8",
     "pytest-asyncio>=0.23",
     "httpx>=0.27",
-    "goal>=2.1.0",
     "costs>=0.1.20",
     "pfix>=0.1.60",
 ]
@@ -72,7 +71,11 @@ max_commits = 500
 badge_color_thresholds = { low = 1.0, medium = 5.0, high = 10.0, critical = 50.0 }
 
 [dependency-groups]
+automation = ["goal>=2.2.0"]
 dev = [
     "build>=1.5.0",
     "twine>=6.2.0",
 ]
+
+[tool.uv.dependency-groups.automation]
+requires-python = ">=3.12"
