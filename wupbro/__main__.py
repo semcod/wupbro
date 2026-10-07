@@ -7,6 +7,15 @@ import os
 
 
 def main() -> None:
+    try:
+        from .autoupdate import check_for_updates
+        check_for_updates("wupbro")
+    except Exception:
+        try:
+            from wupbro.autoupdate import check_for_updates
+            check_for_updates("wupbro")
+        except Exception:
+            pass
     parser = argparse.ArgumentParser(prog="wupbro", description="WUP Browser Dashboard")
     parser.add_argument("--host", default=os.environ.get("WUPBRO_HOST", "0.0.0.0"))
     parser.add_argument("--port", type=int, default=int(os.environ.get("WUPBRO_PORT", "8000")))
